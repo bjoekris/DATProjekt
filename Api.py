@@ -1,4 +1,4 @@
-#pip install "fastapi[standard]"
+# pip install "fastapi[standard]"
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
