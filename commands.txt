@@ -1,0 +1,5 @@
+#pip install fastapi uvicorn python-docx reportlab
+
+#To run the server: uvicorn api:app --reload
+
+#{{company_name}}, {{date}}, {{hours_of_work}}, and {{hour_price}}
