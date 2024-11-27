@@ -1,13 +1,16 @@
 # pip install "fastapi[standard]"
+# pip install python-docx
+# pip install docx2pdf
 
 # Used in API calls
-# from fastapi import FastAPI
-# from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 # Used in MakeTemplate()
 from docx import Document
 import winreg
 from docx.shared import Inches
+from docx.enum.text import WD_BREAK
 
 # Used in ConvertDocxToPDF()
 import os
@@ -20,7 +23,11 @@ from docx2pdf import convert
 #     uvicorn.run(app, host="127.0.0.1", port=8000)
 
 
-# Adding a specified Page Break does not seem to function.
+# TO DO:
+# Attempt to recreate one of the templates from Kapil
+# Set it up to work with Postman
+
+
 def GenerateTemplate(fileName, image = None, imageWidth = None):
     # Used to find the download folder on a given computer.
     folderPath = FindFolderPath()
@@ -28,19 +35,20 @@ def GenerateTemplate(fileName, image = None, imageWidth = None):
 
     doc = Document()
 
+    doc.add_heading('Invoice', 0)
+
     if image != None:
         if imageWidth != None:
             doc.add_picture(image, width = Inches(imageWidth))
         else:
             doc.add_picture(image, width = Inches(1.5))
     
-    doc.add_heading('Invoice', 0)
     doc.add_paragraph('Dear {{Name}} ,')
 
     p = doc.add_paragraph('Please find attached invoice for your recent purchase of ')
     p.add_run('\n\n{{Product(s)}}')
     
-    [doc.add_paragraph('') for _ in range(2)]
+    [doc.add_paragraph('') for _ in range(1)]
 
     table = doc.add_table(rows = 1, cols = 4)
     hdrCells = table.rows[0].cells
@@ -57,14 +65,20 @@ def GenerateTemplate(fileName, image = None, imageWidth = None):
     rowCells[2].text = '{{Unit Price}}'
     rowCells[3].text = '{{Total Price}}'
 
+    doc.add_page_break()
     
-    [doc.add_paragraph('') for _ in range(2)]
+    doc.add_picture('InvoEZ logo.png', width = Inches(4)).keep_together = True
 
-    doc.add_picture('InvoEZ logo.png', width = Inches(1.5))
+    doc.add_paragraph("")
+
+    doc.add_paragraph("Lorem ipsum odor amet, consectetuer adipiscing elit. Luctus ante faucibus habitasse dui hendrerit. Ad dis penatibus laoreet ultrices potenti ad massa. Eros ultricies dui est suscipit libero mi cursus amet. Nulla egestas lacinia molestie ipsum phasellus. Gravida porttitor dui aliquet egestas auctor morbi eu ultrices. Porta interdum sagittis nibh vitae lacinia commodo cursus. Fusce quam porta facilisi cursus cras fermentum eros pulvinar habitant. Class lectus nam pulvinar malesuada odio condimentum. Placerat pulvinar malesuada luctus dui velit massa consequat convallis.")
+    doc.add_paragraph("Eleifend fames diam dui ante metus vestibulum. Ipsum proin sociosqu venenatis posuere elementum. Ac curae cras luctus volutpat imperdiet mattis nullam non ligula. Taciti metus feugiat maecenas nunc volutpat congue accumsan. Netus sed himenaeos ridiculus leo ultricies. Est habitant nec eget interdum mi conubia sodales netus. Praesent nisi urna fringilla cras aptent proin ex. Tincidunt fringilla gravida consectetur vitae a vitae, dolor velit. Dignissim nascetur himenaeos tincidunt ornare nisi lacus pellentesque ex.")
     
-    doc.add_paragraph('We apprecieate your business and please come again!')
-    doc.add_paragraph('Sincerely')
-    doc.add_paragraph('InvoEZ')
+    doc.add_paragraph("")
+
+    doc.add_paragraph('We apprecieate your business and please come again!').keep_together = True
+    doc.add_paragraph('Sincerely').keep_together = True
+    doc.add_paragraph('InvoEZ').keep_together = True
 
     doc.save(f"{templatePath}.docx")
 
@@ -88,8 +102,7 @@ def InsertDynamicData(fileName, items, name = None):
         if p.text.__contains__('{{Product(s)}}'):
             paragraph2 = p
     
-    paragraph2.text = 'Please find attached invoice for your recent purchase of '
-    paragraph2.add_run('\n')
+    paragraph2.text = 'Please find attached invoice for your recent purchase of \n'
     for key in items:
         paragraph2.add_run('\n')
         paragraph2.add_run(str(items[key][0])).bold = True
@@ -129,13 +142,18 @@ def DeleteTableRow(row):
     r._p = r._element = None
 
 if __name__ == "__main__":
-    items = {"Product 1" : [10, 99.95], "Product 2" : [15, 199.95], "Product 3" : [18, 324.95], "Product 4" : [16, 499.95], "Work Hours" : [22.5, 450]}
+    items = {"Product 1" : [10, 99.95], "Product 2" : [15, 199.95], "Product 3" : [18, 324.95], "Product 4" : [16, 499.95], "Product 5" : [19, 649.95],
+        "Product 6" : [4, 1499.95], "Product 7" : [34, 124.95], "Product 8" : [150, 1749.95], "Product 9" : [6, 14999.95], "Product 10" : [60, 19.95], "Work Hours" : [22.5, 450]}
     name = "Cadana"
+
+    image = "CadanaLogo.png"
+    imageWidth = 3
+
     customerName = f'{name} Customer'
 
-    generateTemplate = False
+    generateTemplate = 0
 
-    if generateTemplate == True:
-        GenerateTemplate(name)
+    if generateTemplate == 1:
+        GenerateTemplate(name, image, imageWidth)
     else:
         InsertDynamicData(name, items, customerName)
