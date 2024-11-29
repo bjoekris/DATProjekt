@@ -1,4 +1,5 @@
-#pip install fastapi uvicorn python-docx reportlab
+pip install fastapi uvicorn python-docx reportlab
+pip install python-docx docx2pdf
 
 #To run the server: uvicorn api:app --reload
 
