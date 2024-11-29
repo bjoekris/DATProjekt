@@ -4,8 +4,9 @@
 # pip install python-dateutil
 
 # Used in API calls
-from fastapi import FastAPI
+from fastapi import FastAPI, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 
 # Used in MakeTemplate() and/or InsertDynamicData()
 from docx import Document
@@ -18,19 +19,47 @@ from dateutil.parser import parse
 import os
 from docx2pdf import convert
 
-# @app.post('MakeTemplate/api')
+app = FastAPI()
 
-# if __name__ == '__main__':
-#     import uvicorn
-#     uvicorn.run(app, host='127.0.0.1', port=8000)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
+
+@app.post('/generate-template/')
+@app.post('/insert-dynamic-data/')
 
 
 # TO DO:
 # Attempt to recreate one of the templates from Kapil
-# Set it up to work with Postman
+
+async def insert_dynamic_data(
+        fileName : str = Form(...), 
+        items : dict = Form(...), 
+        nameOverride : bool = Form(...), 
+        name : str = Form(...), 
+        paymentDate : str = Form(...), 
+        comments : str = Form(None)
+    ):
+    return InsertDynamicData(fileName, items, nameOverride, name, paymentDate, comments)
+
+async def generate_template(
+        fileName : str = Form(...), 
+        image : str = Form(None), 
+        imageWidth : float = Form(None), 
+        fileNameOverride : bool = Form(None)
+    ):
+    return GenerateTemplate(fileName, image, imageWidth, fileNameOverride)
 
 
-def GenerateTemplate(fileName, image = None, imageWidth = None, fileNameOverride = None):
+
+
+
+
+def GenerateTemplate(fileName : str, image : str = None, imageWidth : str = None, fileNameOverride : bool = None):
     folderPath = FindFolderPath()
     if fileNameOverride != True:
         templatePath = f'{folderPath}/{fileName} Invoice TemplateFile'
@@ -85,15 +114,17 @@ def GenerateTemplate(fileName, image = None, imageWidth = None, fileNameOverride
     doc.add_paragraph('InvoEZ').keep_together = True
 
     doc.save(f'{templatePath}.docx')
+    return FileResponse(f'{templatePath}.docx', media_type = 'application/docx', filename = fileName)
 
 
 
 
-def InsertDynamicData(fileName, items, nameOverride, name, executionDate, paymentDate, comments = None):
+
+def InsertDynamicData(fileName : str, items : dict, nameOverride : bool, name : str, paymentDate : str, comments : str = None):
     try:
         IsDate(paymentDate)
     except False:
-        return("Make sure the date is formated correctly.")
+        return Exception("Make sure the date is formated correctly.")
 
     folderPath = FindFolderPath()
 
@@ -165,7 +196,7 @@ def InsertDynamicData(fileName, items, nameOverride, name, executionDate, paymen
             paragraph.text = f'Page {pageCount} of {totalPages}'
 
         if paragraph.text.__contains__('{{Date of Execution}}'):
-            paragraph.text = f'Date of task execution: {executionDate}'
+            paragraph.text = f'Date of task execution: {date.today():%d-%m-%Y}'
         if paragraph.text.__contains__('{{Date of Payment}}'):
             paragraph.text = f'Please ensure that all dues are paid in full before {paymentDate}'
         
@@ -178,7 +209,7 @@ def InsertDynamicData(fileName, items, nameOverride, name, executionDate, paymen
                 DeleteParagraph(paragraph)
 
     doc.save(f'{tempPath}.docx')
-    ConvertDocxToPDF(filePath, tempPath)
+    return ConvertDocxToPDF(filePath, tempPath, f'{fileName} Invoice')
 
 
 
@@ -197,9 +228,11 @@ def CountPages(path):
 
     return pages
 
-def ConvertDocxToPDF(path, tempPath):
+def ConvertDocxToPDF(path, tempPath, fileName):
     convert(f'{tempPath}.docx', f'{path}.pdf')
     os.remove(f'{tempPath}.docx')
+
+    return FileResponse(f'{path}.pdf', media_type = 'application/pdf', filename = fileName)
 
 def FindFolderPath():
     reg_key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r'Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders')
@@ -230,33 +263,37 @@ def IsDate(date, fuzzy = False):
 
 
 if __name__ == '__main__':
-    
-    '--------------------------------------------------'
+    postman = 1
 
-    items = {'Product 1' : [10, 99.95], 'Product 2' : [15, 199.95], 'Product 3' : [18, 324.95], 'Product 4' : [16, 499.95], 'Product 5' : [19, 649.95],
-        'Product 6' : [4, 1499.95], 'Product 7' : [34, 124.95], 'Product 8' : [150, 1749.95], 'Product 9' : [6, 14999.95], 'Product 10' : [60, 19.95], 'Work Hours' : [22.5, 450]}
-    fileName = 'Cadana Invoice TemplateFile'
-    name = 'Cadana'
+    if postman == 0:
+        '--------------------------------------------------'
 
-    image = 'CadanaLogo.png'
-    imageWidth = 3
+        items = {'Product 1' : [10, 99.95], 'Product 2' : [15, 199.95], 'Product 3' : [18, 324.95], 'Product 4' : [16, 499.95], 'Product 5' : [19, 649.95],
+            'Product 6' : [4, 1499.95], 'Product 7' : [34, 124.95], 'Product 8' : [150, 1749.95], 'Product 9' : [6, 14999.95], 'Product 10' : [60, 19.95], 'Work Hours' : [22.5, 450]}
+        fileName = 'Cadana Invoice TemplateFile'
+        name = 'Cadana'
 
-    '--------------------------------------------------'
-    
-    itemsHCFlyt = {'Fast pris for flytning' : [1, 9999.95], 'Fast pris for nedpakning' : [1, 249.95], 'Fast pris for udpakning' : [1, 499.95], 'Pris for opbevaring' : [1, 349.95],
-        'Pris for leje af udstyr' : [8, 199.95], 'Tungløft' : [7, 99.95], 'Ekstra Arbejdstimer' : [7.5, 50]}
-    fileNameHCFlyt =  'Ordrebekræftelse_opdateret'
+        image = 'CadanaLogo.png'
+        imageWidth = 3
 
-    customerNameHCFlyt = f'H.C. Andersens Flyttefirma A/S'
-    commentsHCFlyt = ['This is a comment', 'This is another comment']
-    today = f'{date.today():%d-%m-%Y}'
-    paymentDay = '01-01-2025'
+        '--------------------------------------------------'
+        
+        itemsHCFlyt = {'Fast pris for flytning' : [1, 9999.95], 'Fast pris for nedpakning' : [1, 249.95], 'Fast pris for udpakning' : [1, 499.95], 'Pris for opbevaring' : [1, 349.95],
+            'Pris for leje af udstyr' : [8, 199.95], 'Tungløft' : [7, 99.95], 'Ekstra Arbejdstimer' : [7.5, 50]}
+        fileNameHCFlyt =  'Ordrebekræftelse_opdateret'
 
-    '--------------------------------------------------'
+        customerNameHCFlyt = 'H.C. Andersens Flyttefirma A/S'
+        commentsHCFlyt = ['This is a comment', 'This is another comment']
+        paymentDay = '01-01-2025'
 
-    generateTemplate = 0
+        '--------------------------------------------------'
 
-    if generateTemplate == 1:
-        GenerateTemplate(fileName, image, imageWidth, True)
+        generateTemplate = 0
+
+        if generateTemplate == 1:
+            generate_template(fileName, image, imageWidth, True)
+        else:
+            insert_dynamic_data(name, itemsHCFlyt, True, customerNameHCFlyt, paymentDay)
     else:
-        InsertDynamicData(name, itemsHCFlyt, True, customerNameHCFlyt, today, paymentDay)
+        import uvicorn
+        uvicorn.run(app, host='127.0.0.1', port=8000)
