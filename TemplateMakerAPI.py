@@ -4,7 +4,7 @@
 # pip install python-dateutil
 
 # Used in API calls
-from fastapi import FastAPI, File, UploadFile, Form
+from fastapi import FastAPI, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
@@ -12,8 +12,7 @@ from fastapi.responses import FileResponse
 from docx import Document
 import winreg
 from docx.shared import Inches
-from datetime import date
-from dateutil.parser import parse
+from datetime import datetime
 
 # Used in ConvertDocxToPDF()
 import os
@@ -29,37 +28,31 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
+
 @app.post('/generate-template/')
-@app.post('/insert-dynamic-data/')
-
-
-# TO DO:
-# Attempt to recreate one of the templates from Kapil
-
-async def insert_dynamic_data(
-        fileName : str = Form(...), 
-        items : dict = Form(...), 
-        nameOverride : bool = Form(...), 
-        name : str = Form(...), 
-        paymentDate : str = Form(...), 
-        comments : str = Form(None)
-    ):
-    return InsertDynamicData(fileName, items, nameOverride, name, paymentDate, comments)
-
 async def generate_template(
         fileName : str = Form(...), 
         image : str = Form(None), 
         imageWidth : float = Form(None), 
         fileNameOverride : bool = Form(None)
     ):
-    return GenerateTemplate(fileName, image, imageWidth, fileNameOverride)
+    return GenerateTemplate(fileName, image, imageWidth, fileNameOverride, True)
+
+@app.post('/insert-dynamic-data/')
+async def inser_dynamic_data(
+        fileName : str,
+        items : dict,
+        values : dict,
+        totalPages : int
+    ):
+    return InsertDynamicData(fileName = fileName, values = values, items = items, totalPages = totalPages, postman = True)
 
 
 
 
 
 
-def GenerateTemplate(fileName : str, image : str = None, imageWidth : str = None, fileNameOverride : bool = None):
+def GenerateTemplate(fileName : str, image : str = None, imageWidth : str = None, fileNameOverride : bool = None, postman : bool = False):
     folderPath = FindFolderPath()
     if fileNameOverride != True:
         templatePath = f'{folderPath}/{fileName} Invoice TemplateFile'
@@ -114,102 +107,85 @@ def GenerateTemplate(fileName : str, image : str = None, imageWidth : str = None
     doc.add_paragraph('InvoEZ').keep_together = True
 
     doc.save(f'{templatePath}.docx')
-    return FileResponse(f'{templatePath}.docx', media_type = 'application/docx', filename = fileName)
+    if postman == True: return FileResponse(f'{templatePath}.docx', media_type = 'application/docx', filename = fileName)
 
 
 
 
 
-def InsertDynamicData(fileName : str, items : dict, nameOverride : bool, name : str, paymentDate : str, comments : str = None):
-    try:
-        IsDate(paymentDate)
-    except False:
-        return Exception("Make sure the date is formated correctly.")
-
+def InsertDynamicData(fileName : str, values : dict, items : dict, totalPages : int = None, postman : bool = False):
     folderPath = FindFolderPath()
 
-    if nameOverride != True:
-        templatePath = f'{folderPath}/{fileName}'
-    else:
-        templatePath = f'{folderPath}/{fileName} Invoice TemplateFile'
+    templatePath = f'{folderPath}/{fileName} Invoice TemplateFile'
     filePath = f'{folderPath}/{fileName} Invoice'
     tempPath = f'{folderPath}/{fileName} TempFile'
 
     doc = Document(f'{templatePath}.docx')
 
+    valuesCount = 0
     for p in doc.paragraphs:
-        if p.text.__contains__('{{Name}}'):
-            paragraph1 = p
-    
-    paragraph1.text = f'Dear '
-    paragraph1.add_run(f'{name}')
+        if p.text.__contains__('{{'):
+            if not p.text.__contains__('{{Page Number}} of {{Total Pages}}'):
+                valuesCount += 1
 
-    for p in doc.paragraphs:
-        if p.text.__contains__('{{Product(s)}}'):
-            paragraph2 = p
+    if len(values) != valuesCount:
+        print(f'There are {len(values)} inputted values, but the template holds {valuesCount} values.')
+        return
     
-    paragraph2.text = 'Please find attached invoice for your recent purchase of \n'
-    for key in items:
-        if items[key][0] > 1:
-            paragraph2.add_run('\n')
-            paragraph2.add_run(str(items[key][0])).bold = True
-            paragraph2.add_run(' units of ')
-            paragraph2.add_run(key).bold = True
-            paragraph2.add_run('.')
-    
+    for key in values:
+        for p in doc.paragraphs:
+            if p.text.__contains__(key):
+                if key == 'Second Adresses' or 'Details':
+                    p.text = values[key[0]]
+                    for item in values[key]:
+                        p.add_run(f'{item}\n')
+                else:
+                    p.text = values[key]
+
+    table = None
     for t in doc.tables:
-        if t.cell(1, 0).text.__contains__('{{Product Name}}'):
+        if t.cell(0, 0).text.__contains__('{{Product Table}}'):
+            t.cell(0, 0).text = ''
             table = t
-    
-    DeleteTableRow(table.rows[1])
-    for key in items:
-        rowCells = table.add_row().cells
-        rowCells[0].text = key
-        if items[key][0] > 1:
-            if isinstance(items[key][0], float):
-                rowCells[1].text = f'{items[key][0]:,.2f}'
-            elif isinstance(items[key][0], int):
-                rowCells[1].text = f'{items[key][0]}'
-        rowCells[2].text = f'{items[key][1]:,.2f}'
-        rowCells[3].text = f'{items[key][0] * items[key][1]:,.2f}'
-    
-    totalUnits = 0
-    totalPrice = 0
-    for key in items:
-        totalUnits += items[key][0]
-        totalPrice += items[key][0] * items[key][1]
+            break
 
-    tableTotals = {'Total ex. moms' : totalUnits, 'Total ink. moms' : totalUnits}
-    for key in tableTotals:
-        rowCells = table.add_row().cells
-        rowCells[0].text = key
-        rowCells[1].text = f'{tableTotals[key]:,.2f}'
-        rowCells[3].text = f'{totalPrice:,.2f}'
+    if table != None:
+        for key in items:
+            rowCells = table.add_row().cells
+            rowCells[0].text = key
+            if items[key][0] > 1:
+                if isinstance(items[key][0], float):
+                    rowCells[1].text = f'{items[key][0]:,.2f}'
+                elif isinstance(items[key][0], int):
+                    rowCells[1].text = f'{items[key][0]}'
+            rowCells[2].text = f'{items[key][1]:,.2f}'
+            rowCells[3].text = f'{items[key][0] * items[key][1]:,.2f}'
+
+        totalUnits = 0
+        totalPrice = 0
+        for key in items:
+            totalUnits += items[key][0]
+            totalPrice += items[key][0] * items[key][1]
+
+        tableTotals = {'Total ex. moms' : totalUnits, 'Total ink. moms' : totalUnits}
+        for key in tableTotals:
+            rowCells = table.add_row().cells
+            rowCells[0].text = key
+            rowCells[1].text = f'{tableTotals[key]:,.2f}'
+            rowCells[3].text = f'{totalPrice:,.2f}'
     
     doc.save(f'{tempPath}.docx')
-    totalPages = CountPages(f'{tempPath}.docx')
+    if totalPages == None: totalPages = CountPages(f'{tempPath}.docx')
     
     pageCount = 0
     for paragraph in doc.paragraphs:
         if paragraph.text.__contains__('{{Page Number}} of {{Total Pages}}'):
             pageCount += 1
             paragraph.text = f'Page {pageCount} of {totalPages}'
-
-        if paragraph.text.__contains__('{{Date of Execution}}'):
-            paragraph.text = f'Date of task execution: {date.today():%d-%m-%Y}'
-        if paragraph.text.__contains__('{{Date of Payment}}'):
-            paragraph.text = f'Please ensure that all dues are paid in full before {paymentDate}'
         
-        if paragraph.text.__contains__('{{Comments}}'):
-            if comments != None:
-                paragraph.text = '\n'
-                for comment in comments:
-                    paragraph.add_run(f'{comment}\n')
-            else:
-                DeleteParagraph(paragraph)
-
     doc.save(f'{tempPath}.docx')
-    return ConvertDocxToPDF(filePath, tempPath, f'{fileName} Invoice')
+    if postman == True: return ConvertDocxToPDF(filePath, tempPath, f'{fileName} Invoice')
+    else: ConvertDocxToPDF(filePath, tempPath, f'{fileName} Invoice')
 
 
 
@@ -246,32 +222,19 @@ def DeleteParagraph(paragraph):
     p.getparent().remove(p)
     p._p = p._element = None
 
-def DeleteTableRow(row):
-    r = row._element
-    r.getparent().remove(r)
-    r._p = r._element = None
-
-def IsDate(date, fuzzy = False):
-    try: 
-        parse(date, fuzzy=fuzzy)
-        return True
-
-    except ValueError:
-        return False
-
 
 
 
 if __name__ == '__main__':
-    postman = 1
+    postman = 0
 
     if postman == 0:
-        '--------------------------------------------------'
-
         items = {'Product 1' : [10, 99.95], 'Product 2' : [15, 199.95], 'Product 3' : [18, 324.95], 'Product 4' : [16, 499.95], 'Product 5' : [19, 649.95],
             'Product 6' : [4, 1499.95], 'Product 7' : [34, 124.95], 'Product 8' : [150, 1749.95], 'Product 9' : [6, 14999.95], 'Product 10' : [60, 19.95], 'Work Hours' : [22.5, 450]}
         fileName = 'Cadana Invoice TemplateFile'
+        
         name = 'Cadana'
+        customerName = 'Cadana Customer'
 
         image = 'CadanaLogo.png'
         imageWidth = 3
@@ -280,6 +243,11 @@ if __name__ == '__main__':
         
         itemsHCFlyt = {'Fast pris for flytning' : [1, 9999.95], 'Fast pris for nedpakning' : [1, 249.95], 'Fast pris for udpakning' : [1, 499.95], 'Pris for opbevaring' : [1, 349.95],
             'Pris for leje af udstyr' : [8, 199.95], 'Tungløft' : [7, 99.95], 'Ekstra Arbejdstimer' : [7.5, 50]}
+        valuesHCFlyt = {'Name' : 'Kenneth', 'Adress' : 'Kenneths address', 'City, postcode' : 'kenneths city and postcode', 'Customer Number' : 'Kundenummer:	123456', 'Order Number' : 'Ordrenummer:	123456', 
+                        'Current Date' : f'Dato: {datetime.today().strftime("%d-%m-%Y")}', 'Offer Name' : 'Offer for Kenneth', 'Date of Execution' : 'Dato for flytning: 01-01-2025', 'Floor w Elevator' : 'Etage (med/uden elevator): St. til 1st floor, w Elevator', 
+                        'Square Meters' : '5 m2', 'Parking' : 'Parkering og adgangsforhold:\nYes', 'Time Estimation' : 'Andet: 3 hours', 'Task Description' : 'Opgaver beskrivelse: This is the task description', 'Second Adresses' : ['Arbejdsadresse forskellig fra faktureringsadresse/Køreplan:', '1st location', '2nd location'], 
+                        'Comments' : 'No comments', 'Agreed Date' : 'D. 01-01-2025 mellem kl. 10:00 og 11:00', 'Agreed Date for Equipment' : 'D. 02-01-2025 mellem kl. 11:00 og 12:00', 
+                        'Customer Phone' : 'Telefon 12345678', 'Total Price' : 'Total pris for opgaven	10.000 kr', 'Reg Number' : 'Reg: 123456', 'Account Number' : 'Konto: 123456', 'Order Id' : 'Anfør 123456', 'Details' : ['This is a details', 'This is also a detail']}
         fileNameHCFlyt =  'Ordrebekræftelse_opdateret'
 
         customerNameHCFlyt = 'H.C. Andersens Flyttefirma A/S'
@@ -291,9 +259,9 @@ if __name__ == '__main__':
         generateTemplate = 0
 
         if generateTemplate == 1:
-            generate_template(fileName, image, imageWidth, True)
+            GenerateTemplate(fileName, image, imageWidth, True)
         else:
-            insert_dynamic_data(name, itemsHCFlyt, True, customerNameHCFlyt, paymentDay)
+            InsertDynamicData(name, valuesHCFlyt, itemsHCFlyt, 8)
     else:
         import uvicorn
         uvicorn.run(app, host='127.0.0.1', port=8000)
