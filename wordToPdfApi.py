@@ -79,8 +79,8 @@ async def generate_pdf(
                 row = []
                 for image_path in image_paths:
                     img = Image(image_path)
-                    max_width = 1.5 * inch  #Maximum width for the image
-                    max_height = 1.5 * inch  #Maximum height for the image
+                    max_width = 1.5 * inch  
+                    max_height = 1.5 * inch  
 
                     #Resizing the images to keep aspect ratio
                     if img.drawWidth > max_width or img.drawHeight > max_height:
