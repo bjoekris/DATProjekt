@@ -20,6 +20,10 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
+@app.get("/")
+def index():
+    return {"message": "Welcome to the PDF Generator API"}
+
 @app.post("/generate-pdf/")
 async def generate_pdf(
     wordTemplate: UploadFile = File(...),
