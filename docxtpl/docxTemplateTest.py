@@ -1,6 +1,7 @@
 # pip install 'fastapi[standard]'
 # pip install docxtpl
 # pip install docx2pdf
+# pip install python-docx
 
 # Used for API calls
 from fastapi import FastAPI, Form, File
@@ -10,6 +11,7 @@ from fastapi.responses import FileResponse
 # Used for inserting data in template
 from docxtpl import DocxTemplate
 from datetime import datetime
+from docx import Document
 
 # Used in ConvertDocxToPDF()
 import os
@@ -29,51 +31,119 @@ app.add_middleware(
 async def inser_dynamic_data(
         inputPath: str = Form(...),
         outputPath: str = Form(...),
-
-        contextKeys: list[str] = Form(...),
-        contextValues: list[str] = Form(...),
-
-        tables: list = Form(...)
+        context: dict[str, str] = Form(...),
+        useTotals: bool = Form(...),
     ):
-    context = {}
-    for key in contextKeys:
-        for value in contextValues:
-            context[key] = value
-            print(f'Key: {key}, Value: {context[key]}')
-
-    tpl = DocxTemplate(f'{inputPath}.docx')
+    tpl = DocxTemplate(f'docxtpl/{inputPath}.docx')
+    if useTotals == True: context = InsertTotalPrices(context)
+    
+    errMsg, variablesValid = CheckVariablesValid(inputPath, context)
+    if variablesValid == False:
+        return print(errMsg)
 
     tpl.render(context)
-    tpl.render({'{{Current Date}}' : datetime.today.strftime("%d-%m-%Y")})
-    for table in tables: tpl.render(tables[table])
-
+    
     tpl.save(f'{outputPath}.docx')
-    ConvertDocxToPDF(outputPath)
+    return ConvertDocxToPDF(outputPath)
 
-def ConvertDocxToPDF(path):
+def ConvertDocxToPDF(path: str):
     convert(f'{path}.docx', f'{path}.pdf')
     os.remove(f'{path}.docx')
 
     return FileResponse(f'{path}.pdf', media_type = 'application/pdf', filename = path)
 
+def CheckVariablesValid(path: str, context: dict):
+    doc = Document(f'docxtpl/{path}.docx')
+    valid = True
+
+    keysContained = []
+    keysNotContained = []
+    values = []
+    valuesNotInputted = []
+    valuesInputted = []
+    for p in doc.paragraphs:
+        if p.text.__contains__('{{'):
+            tempValues = []
+            tempValues.append(p.text.rsplit('{{')[1])
+            for value in tempValues:
+                values.append(value.split('}}')[0])
+
+    for key in context:
+        if not isinstance(context[key], list): keysNotContained.append(key)
+    for value in values:
+        valuesNotInputted.append(value)
+    
+    for value in values:
+        for key in context:
+            if value == key:
+                keysContained.append(key)
+                keysNotContained.remove(key)
+
+                valuesInputted.append(value)
+                valuesNotInputted.remove(value)
+    
+    exception = 'ContextVariablesError:\n'
+    if not len(keysNotContained) == 0:
+        for key in keysNotContained:
+            exception += f'{key} was not found in template\n'
+        valid = False
+    
+    if not len(valuesNotInputted) == 0:
+        for value in valuesNotInputted:
+            exception += f'{value} was not found in context\n'
+        valid = False
+    
+    return exception, valid
+
+def InsertTotalPrices(context: dict):
+    index = 0
+    totalPrice = 0
+    for i in context['itemsTable']:
+        context['itemsTable'][index]['priceTotal'] = i['units'] * i['priceUnit']
+        totalPrice += context['itemsTable'][index]['priceTotal']
+
+        index += 1
+
+    context['itemsTable'].append(
+            {
+                'type' : 'Pris eks. moms',
+                'units' : '',
+                'priceUnit' : '',
+                'priceTotal' : "%.2f" % totalPrice,
+            }
+    )
+    context['itemsTable'].append(
+            {
+                'type' : 'Pris inkl. moms',
+                'units' : '',
+                'priceUnit' : '',
+                'priceTotal' : "%.2f" % (totalPrice * 1.25),
+            }
+    )
+    context['Total_Price'] = "%.2f" % (totalPrice * 1.25)
+    return context
 
 # ------------------------------------------------------------------------------------------- #
 
 
+# Test method (Can't get Postman to accept dictionaries for some reason)
 def InserDynamicData(
         inputPath: str,
         outputPath: str,
-
         context: dict[str, str],
-        tables: dict[dict[str, list[int, float]]]
+        useTotals: bool,
     ):
     tpl = DocxTemplate(f'docxtpl/{inputPath}.docx')
+    if useTotals == True: context = InsertTotalPrices(context)
+    
+    errMsg, variablesValid = CheckVariablesValid(inputPath, context)
+    if variablesValid == False:
+        return print(errMsg)
 
     tpl.render(context)
-    tpl.render({'{{Current Date}}' : datetime.today().strftime("%d-%m-%Y")})
-    for table in tables: tpl.render(tables[table])
-
-    tpl.save(f'{outputPath}.pdf')
+    
+    tpl.save(f'{outputPath}.docx')
+    ConvertDocxToPDF(outputPath)
 
 
 # ------------------------------------------------------------------------------------------- #
@@ -81,19 +151,65 @@ def InserDynamicData(
 
 # Example of how the context dictionary could look like:
 context = {
-    '{{Name}}' : 'Magnus Næhr',
-    '{{Adress}}' : 'Mølletoften 1',
-    '{{City_postcode}}' : 'Lyngby, 2800',
-}
+    # Variables
+    'Name' : 'Magnus Næhr',
+    'Adress' : 'Mølletoften 1',
+    'City_postcode' : 'Lyngby, 2800',
+    'Customer_Number' : 123456,
+    'Order_Number' : 123456,
+    'Current_Date' : datetime.today().strftime("%d-%m-%Y"),
+    'Offer_Name' : 'Dette er tilbudet',
+    'Date_of_Execution' : '13-12-2024',
+    'Floor_Elevator' : '2. etage, m. elevator.',
+    'Square_Meters' : 28,
+    'Parking' : 'Perkeringsplads ude foran bolig.',
+    'Time_Estimation' : '2 timer.',
+    'Task_Description' : 'Dette er opgave beskrivelsen.',
+    'Second_Adresses' : 'Dette er en sekundær addresse.',
+    'Comments' : 'Dette er en kommentar.',
+    'Agreed_Date' : '13-12-2024',
+    'Start_Time' : '10:30 - 11:30',
+    'Agreed_Date_Equipment' : '14-12-2024',
+    'Start_Time_Equipment' : '11:00 - 12:00',
+    'Customer_Phone' : '12345678',
+    'Total_Price' : 0,
+    'Reg_Number' : 123456,
+    'Account_Number' : 123456,
+    'Order_Id' : 123456,
+    'Details' : 'Dette er en detalje.',
 
-# Example for how a table could look like in the table dictionary:
-priceTabel = {
-    'listEntries' : [
-        { 'Fast pris for flytning' : [1, 9999.95] },
-        { 'Fast pris for nedpakning' : [1, 249.95] },
-        { 'Fast pris for opbevaring' : [1, 349.95] },
-        { 'Pris for udlejning af udstyr' : [8, 199.95] },
-        { 'Tungløft' : [7, 99.95] }
+    # Tables
+    'itemsTable' : [
+        {
+            'type' : 'Fast pris for flytning',
+            'units' : 1,
+            'priceUnit' : 9999.95,
+            'priceTotal' : 0
+        },
+        {
+            'type' : 'Fast pris for nedpakning',
+            'units' : 1,
+            'priceUnit' : 249.95,
+            'priceTotal' : 0
+        },
+        {
+            'type' : 'Fast pris for opbevaring',
+            'units' : 1,
+            'priceUnit' : 349.95,
+            'priceTotal' : 0
+        },
+        {
+            'type' : 'Pris for udlejning af udstyr',
+            'units' : 8,
+            'priceUnit' : 199.95,
+            'priceTotal' : 0
+        },
+        {
+            'type' : 'Tungløft',
+            'units' : 7,
+            'priceUnit' : 99.95,
+            'priceTotal' : 0
+        },
     ]
 }
 
@@ -108,4 +224,4 @@ if __name__ == '__main__':
         import uvicorn
         uvicorn.run(app, host = '127.0.0.1', port = 8000)
     else:
-        InserDynamicData('HC Andersen Flyttefirma Template', 'HC Andersen Flyttefirma Invoice', context, priceTabel)
+        InserDynamicData('HC Andersen Flyttefirma Template', 'HC Andersen Flyttefirma Invoice', context, True)
