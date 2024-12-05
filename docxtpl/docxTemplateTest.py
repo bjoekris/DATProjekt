@@ -4,16 +4,19 @@
 # pip install python-docx
 
 # Used for API calls
-from fastapi import FastAPI, Form, File
+from fastapi import FastAPI, Form, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
+# Used in conversion of required data, when converting from UploadFile to other type
+import json
+import shutil
+
 # Used for inserting data in template
 from docxtpl import DocxTemplate
-from datetime import datetime
 from docx import Document
 
-# Used in ConvertDocxToPDF()
+# Used for converting docx-format to pdf-format
 import os
 from docx2pdf import convert
 
@@ -29,22 +32,31 @@ app.add_middleware(
 
 @app.post('/insert-dynamic-data/')
 async def inser_dynamic_data(
-        inputPath: str = Form(...),
-        outputPath: str = Form(...),
-        context: dict[str, str] = Form(...),
-        useTotals: bool = Form(...),
+        templateFile: UploadFile = File(...),
+        pdfName: str = Form(...),
+        contextFile: UploadFile = File(...),
     ):
-    tpl = DocxTemplate(f'docxtpl/{inputPath}.docx')
-    if useTotals == True: context = InsertTotalPrices(context)
-    
-    errMsg, variablesValid = CheckVariablesValid(inputPath, context)
-    if variablesValid == False:
-        return print(errMsg)
+    # Extracts the context-dictionary from .json file
+    context = json.loads(contextFile.file.read())
 
+    # Save a copy pf the uploaded template file
+    templatePath = 'uploadedTemplate.docx'
+    with open(templatePath, "wb") as buffer:
+        shutil.copyfileobj(templateFile.file, buffer)
+
+    tpl = DocxTemplate(templatePath)
+    context = InitializeContext(context)
+    
+    errMsg, variablesValid = ValidateVariables(templatePath, context)
+    if variablesValid == False:
+        return errMsg
+
+    # Inserts data from the context-dictionary to the template
     tpl.render(context)
     
-    tpl.save(f'{outputPath}.docx')
-    return ConvertDocxToPDF(outputPath)
+    tpl.save(f'{pdfName}.docx')
+    InsertPageNumbers(f'{pdfName}.docx')
+    return ConvertDocxToPDF(pdfName)
 
 def ConvertDocxToPDF(path: str):
     convert(f'{path}.docx', f'{path}.pdf')
@@ -52,8 +64,8 @@ def ConvertDocxToPDF(path: str):
 
     return FileResponse(f'{path}.pdf', media_type = 'application/pdf', filename = path)
 
-def CheckVariablesValid(path: str, context: dict):
-    doc = Document(f'docxtpl/{path}.docx')
+def ValidateVariables(path: str, context: dict):
+    doc = Document(path)
     valid = True
 
     keysContained = []
@@ -61,13 +73,30 @@ def CheckVariablesValid(path: str, context: dict):
     values = []
     valuesNotInputted = []
     valuesInputted = []
-    for p in doc.paragraphs:
-        if p.text.__contains__('{{'):
-            tempValues = []
-            tempValues.append(p.text.rsplit('{{')[1])
-            for value in tempValues:
-                values.append(value.split('}}')[0])
 
+    for p in doc.paragraphs:
+        # All variables must begin with "{{", therefore we can find them simply by looking for this
+        if p.text.__contains__('{{') and not (p.text.__contains__('{% for') or p.text.__contains__('{% endfor')):
+            tempValues = p.text.rsplit('{{')
+
+            for temp in tempValues:
+                if not temp.__contains__('}}'):
+                    tempValues.remove(temp)
+
+            # I don't know why, but it only seems to be able to do one of the variables per for-loop...
+            # It doesn't work correctly with a single for-loop, there must be one for each variable in the tempValues list
+            for _ in range(len(tempValues)):
+                for tempValue in tempValues:
+                    tempValues.remove(tempValue)
+                    tempValue = tempValue.split('}}')[0]
+                    tempValues.append(tempValue)
+
+            for temp in tempValues:
+                if not values.__contains__(temp):
+                    values.append(temp)
+
+    # Ignores lists, because these are not acounted for as variables in the template
+    # It is also not seen as an error, if these are empty
     for key in context:
         if not isinstance(context[key], list): keysNotContained.append(key)
     for value in values:
@@ -82,19 +111,22 @@ def CheckVariablesValid(path: str, context: dict):
                 valuesInputted.append(value)
                 valuesNotInputted.remove(value)
     
-    exception = 'ContextVariablesError:\n'
+    # Builds the exception string, so it can be returned
+    exception = 'ContextVariablesError: '
     if not len(keysNotContained) == 0:
         for key in keysNotContained:
-            exception += f'{key} was not found in template\n'
+            exception += f'{key} was not found in template. '
         valid = False
     
     if not len(valuesNotInputted) == 0:
         for value in valuesNotInputted:
-            exception += f'{value} was not found in context\n'
+            exception += f'{value} was not found in context. '
         valid = False
     
     return exception, valid
 
+# Inserts the total price to the context dictionary, this is done to automate the proccess
+# I would suggest moving this out of the python file and place it in the WebApp
 def InsertTotalPrices(context: dict):
     index = 0
     totalPrice = 0
@@ -123,105 +155,37 @@ def InsertTotalPrices(context: dict):
     context['Total_Price'] = "%.2f" % (totalPrice * 1.25)
     return context
 
-# ------------------------------------------------------------------------------------------- #
+def InsertPageNumbers(path: str):
+    doc = Document(path)
 
-
-# Test method (Can't get Postman to accept dictionaries for some reason)
-def InserDynamicData(
-        inputPath: str,
-        outputPath: str,
-        context: dict[str, str],
-        useTotals: bool,
-    ):
-    tpl = DocxTemplate(f'docxtpl/{inputPath}.docx')
-    if useTotals == True: context = InsertTotalPrices(context)
+    pageNumber = 1
+    for p in doc.paragraphs:
+        if p.text.__contains__('{{'):
+            subStr = p.text
+            subStr = subStr.split('{{Current_Page}}')
+            subStr = subStr[0]+str(pageNumber)+subStr[1]
+            p.text = subStr
+            pageNumber += 1
     
-    errMsg, variablesValid = CheckVariablesValid(inputPath, context)
-    if variablesValid == False:
-        return print(errMsg)
+    doc.save(path)
+    tpl = DocxTemplate(path)
 
+    context = {'Total_Pages' : str(pageNumber - 1)}
     tpl.render(context)
-    
-    tpl.save(f'{outputPath}.docx')
-    ConvertDocxToPDF(outputPath)
 
+    tpl.save(path)
 
-# ------------------------------------------------------------------------------------------- #
-
-
-# Example of how the context dictionary could look like:
-context = {
-    # Variables
-    'Name' : 'Magnus Næhr',
-    'Adress' : 'Mølletoften 1',
-    'City_postcode' : 'Lyngby, 2800',
-    'Customer_Number' : 123456,
-    'Order_Number' : 123456,
-    'Current_Date' : datetime.today().strftime("%d-%m-%Y"),
-    'Offer_Name' : 'Dette er tilbudet',
-    'Date_of_Execution' : '13-12-2024',
-    'Floor_Elevator' : '2. etage, m. elevator.',
-    'Square_Meters' : 28,
-    'Parking' : 'Perkeringsplads ude foran bolig.',
-    'Time_Estimation' : '2 timer.',
-    'Task_Description' : 'Dette er opgave beskrivelsen.',
-    'Second_Adresses' : 'Dette er en sekundær addresse.',
-    'Comments' : 'Dette er en kommentar.',
-    'Agreed_Date' : '13-12-2024',
-    'Start_Time' : '10:30 - 11:30',
-    'Agreed_Date_Equipment' : '14-12-2024',
-    'Start_Time_Equipment' : '11:00 - 12:00',
-    'Customer_Phone' : '12345678',
-    'Total_Price' : 0,
-    'Reg_Number' : 123456,
-    'Account_Number' : 123456,
-    'Order_Id' : 123456,
-    'Details' : 'Dette er en detalje.',
-
-    # Tables
-    'itemsTable' : [
-        {
-            'type' : 'Fast pris for flytning',
-            'units' : 1,
-            'priceUnit' : 9999.95,
-            'priceTotal' : 0
-        },
-        {
-            'type' : 'Fast pris for nedpakning',
-            'units' : 1,
-            'priceUnit' : 249.95,
-            'priceTotal' : 0
-        },
-        {
-            'type' : 'Fast pris for opbevaring',
-            'units' : 1,
-            'priceUnit' : 349.95,
-            'priceTotal' : 0
-        },
-        {
-            'type' : 'Pris for udlejning af udstyr',
-            'units' : 8,
-            'priceUnit' : 199.95,
-            'priceTotal' : 0
-        },
-        {
-            'type' : 'Tungløft',
-            'units' : 7,
-            'priceUnit' : 99.95,
-            'priceTotal' : 0
-        },
-    ]
-}
-
+# Completes the context dictionary, by adding the last required variables
+# I would suggest moving this out of the python file and place it in the WebApp
+def InitializeContext(context):
+    context = InsertTotalPrices(context)
+    context['Current_Page'] = '{{Current_Page}}'
+    context['Total_Pages'] = '{{Total_Pages}}'
+    return context
 
 # ------------------------------------------------------------------------------------------- #
 
 
 if __name__ == '__main__':
-    usingPostman = 0
-
-    if usingPostman == 1:
-        import uvicorn
-        uvicorn.run(app, host = '127.0.0.1', port = 8000)
-    else:
-        InserDynamicData('HC Andersen Flyttefirma Template', 'HC Andersen Flyttefirma Invoice', context, True)
+    import uvicorn
+    uvicorn.run(app, host = '127.0.0.1', port = 8000)
