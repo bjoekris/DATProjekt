@@ -1,0 +1,19 @@
+# @app.get("/")
+# async def index():
+#     # Define the path for the generated PDF
+#     pdf_path = "output.pdf"
+    
+#     # Generate a simple PDF file with static content
+#     pdf_doc = SimpleDocTemplate(pdf_path, pagesize=letter)
+#     styles = getSampleStyleSheet()
+#     story: list[Flowable] = [Paragraph("PDF burde vise her", styles["Normal"])]
+    
+#     # Build the PDF
+#     pdf_doc.build(story)
+
+#     # Return the PDF inline
+#     return FileResponse(
+#         pdf_path,
+#         media_type="application/pdf",
+#         headers={"Content-Disposition": "inline; filename=output.pdf"}
+#     )
