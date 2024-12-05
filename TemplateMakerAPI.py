@@ -31,21 +31,21 @@ app.add_middleware(
 
 @app.post('/generate-template/')
 async def generate_template(
-        fileName : str = Form(...), 
-        image : str = Form(None), 
-        imageWidth : float = Form(None), 
-        fileNameOverride : bool = Form(None)
+        FileName : str = Form(...), 
+        Image : str = Form(None), 
+        ImageWidth : float = Form(None), 
+        FileNameOverride : bool = Form(None)
     ):
-    return GenerateTemplate(fileName, image, imageWidth, fileNameOverride, True)
+    return GenerateTemplate(FileName, Image, ImageWidth, FileNameOverride, True)
 
 @app.post('/insert-dynamic-data/')
 async def inser_dynamic_data(
-        fileName : str,
-        items : dict,
-        values : dict,
-        totalPages : int
+        FileName : str = Form(...),
+        Items : dict = Form(...),
+        Values : dict = Form(...),
+        TotalPages : int = Form(...)
     ):
-    return InsertDynamicData(fileName = fileName, values = values, items = items, totalPages = totalPages, postman = True)
+    return InsertDynamicData(fileName = FileName, values = Values, items = Items, totalPages = TotalPages, postman = True)
 
 
 
@@ -226,7 +226,7 @@ def DeleteParagraph(paragraph):
 
 
 if __name__ == '__main__':
-    postman = 0
+    postman = 1
 
     if postman == 0:
         items = {'Product 1' : [10, 99.95], 'Product 2' : [15, 199.95], 'Product 3' : [18, 324.95], 'Product 4' : [16, 499.95], 'Product 5' : [19, 649.95],
