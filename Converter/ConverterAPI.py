@@ -4,11 +4,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from docx import Document
 from docx.shared import Inches
 from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Image, Table, TableStyle
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Image, Table, TableStyle, Flowable
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import inch
 from reportlab.lib import colors
 import os
+
 
 app = FastAPI()
 
@@ -20,9 +21,35 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
+# @app.get("/")
+# def index():
+#     return {"message": "PDF Generator API"}
+
+
+#pdf_data = {}
+
 @app.get("/")
-def index():
-    return {"message": "Welcome to the PDF Generator API"}
+async def index():
+    # Define the path for the generated PDF
+    pdf_path = "output.pdf"
+    
+    # Generate a simple PDF file with static content
+    pdf_doc = SimpleDocTemplate(pdf_path, pagesize=letter)
+    styles = getSampleStyleSheet()
+    story: list[Flowable] = [Paragraph("This is the content of the generated PDF file.", styles["Normal"])]
+    
+    # Build the PDF
+    pdf_doc.build(story)
+
+    # Return the PDF inline
+    return FileResponse(
+        pdf_path,
+        media_type="application/pdf",
+        headers={"Content-Disposition": "inline; filename=output.pdf"}
+    )
+
+
+############################################################################################################
 
 @app.post("/generate-pdf/")
 async def generate_pdf(
@@ -33,6 +60,8 @@ async def generate_pdf(
     hour_price: str = Form(...),
     images: list[UploadFile] = File(None)  
 ):
+    #global pdf_data
+
     #Saving the uploaded files
     template_path = "template.docx"
     with open(template_path, "wb") as buffer:
@@ -68,7 +97,7 @@ async def generate_pdf(
     pdf_path = "output.pdf"
     pdf_doc = SimpleDocTemplate(pdf_path, pagesize=letter)
     styles = getSampleStyleSheet()
-    story = []
+    story: list[Flowable] = []
 
     image_index = 0
     for paragraph in doc.paragraphs:
@@ -127,8 +156,12 @@ async def generate_pdf(
     for image_path in image_paths:
         os.remove(image_path)
 
-    return FileResponse(pdf_path, media_type='application/pdf', filename="output.pdf")
+    return FileResponse(pdf_path, 
+    media_type='application/pdf', 
+    headers={"Content-Disposition": "inline; filename=output.pdf"})
+    
+
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=8000)   
+    uvicorn.run(app, host="127.0.0.1", port=8000)
