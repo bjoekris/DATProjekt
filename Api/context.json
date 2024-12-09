@@ -26,7 +26,7 @@
     "Agreed_Date_Equipment" : "14-12-2024",
     "Start_Time_Equipment" : "11:00 - 12:00",
     "Customer_Phone" : "12345678",
-    "Total_Price" : 0,
+    "Total_Price" : 16123.9,
     "Reg_Number" : 123456,
     "Account_Number" : 123456,
     "Order_Id" : 123456,
@@ -37,33 +37,45 @@
     "itemsTable" : [
         {
             "type" : "Fast pris for flytning",
-            "units" : 1,
+            "units" : "",
             "priceUnit" : 9999.95,
-            "priceTotal" : 0
+            "priceTotal" : 9999.95
         },
         {
             "type" : "Fast pris for nedpakning",
-            "units" : 1,
+            "units" : "",
             "priceUnit" : 249.95,
-            "priceTotal" : 0
+            "priceTotal" : 249.95
         },
         {
             "type" : "Fast pris for opbevaring",
-            "units" : 1,
+            "units" : "",
             "priceUnit" : 349.95,
-            "priceTotal" : 0
+            "priceTotal" : 349.95
         },
         {
             "type" : "Pris for udlejning af udstyr",
             "units" : 8,
             "priceUnit" : 199.95,
-            "priceTotal" : 0
+            "priceTotal" : 159960
         },
         {
             "type" : "Tungløft",
             "units" : 7,
             "priceUnit" : 99.95,
-            "priceTotal" : 0
+            "priceTotal" : 699.65
+        },
+        {
+            "type" : "Pris i alt eks. moms",
+            "units" : "",
+            "priceUnit" : "",
+            "priceTotal" : 12899.1
+        },
+        {
+            "type" : "Pris i alt inkl. moms",
+            "units" : "",
+            "priceUnit" : "",
+            "priceTotal" : 16123.9
         }
     ]
 }
