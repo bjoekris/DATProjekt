@@ -36,8 +36,8 @@ contextDict = {
     "Account_Number" : 123456,
     "Order_Id" : 123456,
     "Details" : [
-            "Dette er en detalje.",
-            "Dette er også en detalje"
+        "Dette er en detalje.",
+        "Dette er også en detalje"
     ],
     "itemsTable" : [
         {
@@ -85,27 +85,26 @@ contextDict = {
     ]
 }
 
-testImageURL = [
-    "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fcdn.photographylife.com%2Fwp-content%2Fuploads%2F2014%2F09%2FNikon-D750-Image-Samples-2.jpg&f=1&nofb=1&ipt=a2eaec1c0ec1a1d4e001ca18ea6b952c9961567ffab5dea6ad90da52901064ca&ipo=images/",
-    "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fwww.pixelstalk.net%2Fwp-content%2Fuploads%2F2016%2F07%2F3840x2160-Images-Free-Download.jpg&f=1&nofb=1&ipt=a03ad8f692ef649662d67e3dc842a81bddcd57e2779920b188eddbc435114c4e&ipo=images",
-    "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Funiversemagazine.com%2Fwp-content%2Fuploads%2F2022%2F08%2Fzm4nfgq29yi91-1536x1536-1.jpg&f=1&nofb=1&ipt=3442c84f5326c536eb005071ed537fdbdb6fbb81e0926a9e1567a2e81cf54f9c&ipo=images"
-]
+testImageURL = {
+    "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fcdn.photographylife.com%2Fwp-content%2Fuploads%2F2014%2F09%2FNikon-D750-Image-Samples-2.jpg&f=1&nofb=1&ipt=a2eaec1c0ec1a1d4e001ca18ea6b952c9961567ffab5dea6ad90da52901064ca&ipo=images/" : 6,
+    "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fwww.pixelstalk.net%2Fwp-content%2Fuploads%2F2016%2F07%2F3840x2160-Images-Free-Download.jpg&f=1&nofb=1&ipt=a03ad8f692ef649662d67e3dc842a81bddcd57e2779920b188eddbc435114c4e&ipo=images" : 6,
+    "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Funiversemagazine.com%2Fwp-content%2Fuploads%2F2022%2F08%2Fzm4nfgq29yi91-1536x1536-1.jpg&f=1&nofb=1&ipt=3442c84f5326c536eb005071ed537fdbdb6fbb81e0926a9e1567a2e81cf54f9c&ipo=images" : 6
+}
 
 testTemplatePath = 'Api/HC Andersen Flyttefirma Template.docx'
 testTemplatePathWithImg = 'Api/HC Andersen Flyttefirma Template (With Images).docx'
 
+
+## Unit tests skrevet af Magnus
+# Test version af insert_dynamic_data() funktionen
+# Vi bruger en test version af funktionen, da vi ikke bruger Postman til at køre vores unit tests
+# Vi kan derfor ikke sende filer, ligesom i den rigtige funktion, men er i stedet nødt til at sende datane direkte
 def test_InsertDynamicData(
         templateFile: str,
-        contextFile: dict,
-        imageURLFile: list = None,
-        imagesSize: int = 5,
+        context: dict,
+        imageURLs: list = None,
         pdfName: str = "Invoice",
     ):
-    # Extracts the context-dictionary from .json file
-    context: dict = contextFile
-    imageURLs: list = imageURLFile
-
-    # Save a copy pf the uploaded template file
     tpl = DocxTemplate(templateFile)
     
     if imageURLs != None:
@@ -114,7 +113,7 @@ def test_InsertDynamicData(
         for url in imageURLs:
             image = FindImage(url, f'image{index}')
             
-            foundImage = InlineImage(tpl, image, width = Inches(imagesSize))
+            foundImage = InlineImage(tpl, image, width = Inches(imageURLs[url]))
             
             images.append(image)
             context[f'image{index}'] = foundImage
@@ -128,13 +127,13 @@ def test_InsertDynamicData(
         if imageURLs != None: RemoveRenderedImages(images)
         return errMsg
 
-    # Inserts data from the context-dictionary to the template
     tpl.render(context)
     
     tpl.save(f'{pdfName}.docx')
 
     if imageURLs != None: RemoveRenderedImages(images)
-    return ConvertDocxToPDF(pdfName, templateFile)
+    return ConvertDocxToPDF(pdfName, templateFile, True)
+
 
 class TestInsertDynamicData(unittest.TestCase):
     def test_contextTooLargeWithImg(self):
@@ -170,6 +169,7 @@ class TestInsertDynamicData(unittest.TestCase):
     
     def test_success(self):
         self.assertTrue(test_InsertDynamicData(testTemplatePath, contextDict))
-    
+
+
 if __name__ == '__main__':
     unittest.main()

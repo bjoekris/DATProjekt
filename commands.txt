@@ -1,5 +1,9 @@
 # pip install fastapi uvicorn python-docx reportlab
 # pip install python-docx docx2pdf
+# pip install 'fastapi[standard]'
+# pip install docxtpl
+# pip install requests
+# pip install pillow
 
 # To run the server: uvicorn api:app --reload
 #   If it doesn't work, this may work instead: python -m uvicorn main:app --reload
