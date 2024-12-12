@@ -1,8 +1,9 @@
 # Used for unit testing
 import unittest
 from copy import deepcopy
-from main import *
+from local import *
 
+pdfName = 'Invoice'
 contextDict = {
     "Name" : "Magnus Næhr",
     "Adress" : "Mølletoften 1",
@@ -93,60 +94,13 @@ testTemplatePath = 'Api/HC Andersen Flyttefirma Template.docx'
 
 
 ## Unit tests skrevet af Magnus
-# Test version af insert_dynamic_data() funktionen
-# Vi bruger en test version af funktionen, da vi ikke bruger Postman til at køre vores unit tests
-# Vi kan derfor ikke sende filer, ligesom i den rigtige funktion, men er i stedet nødt til at sende datane direkte
-def test_InsertDynamicData(
-        templateStr: str,
-        context: dict,
-        pdfName: str = "Invoice",
-    ):
-    # Gemmer kopi af uploadede skabelon fil
-    templatePath = 'uploadedTemplate.docx'
-    Document(templateStr).save(templatePath)
-
-    contextKeys: list = context.keys()
-    
-    # Finder og åbner den kopierede skabelon som DocxTemplate objekt
-    tpl = DocxTemplate(templatePath)
-    
-    # Finder givene billeder fra URL, og ligger den i context-dictionary
-    index = 0
-    imagesToRemove = []
-    if contextKeys.__contains__('Images'):
-        context["InlineImages"] = []
-        for url in context['Images']:
-            image = FindImage(url, f'image{index}')
-            context['InlineImages'].append(InlineImage(tpl, image, width = Inches(context['Images'][url])))
-
-            imagesToRemove.append(f'image{index}.png')
-            index += 1
-
-    # Validere context- og skabelon-variabler
-    errMsg, valid = ValidateVariables(templatePath, context)
-    if valid == False:
-        os.remove(templatePath)
-        if contextKeys.__contains__('Images'):
-            for image in imagesToRemove: os.remove(image)
-        return errMsg
-
-    # Indsætter data fra context-dictionary til skabelon
-    tpl.render(context)
-    
-    # Gemmer og konvertere til PDF
-    tpl.save(f'{pdfName}.docx')
-    if contextKeys.__contains__('Images'):
-        for image in imagesToRemove: os.remove(image)
-    return ConvertDocxToPDF(pdfName, templatePath)
-
-
 class TestInsertDynamicData(unittest.TestCase):
     def test_contextTooLargeWithImg(self):
         testContext = deepcopy(contextDict)
         expectedErrMsg = 'test1 was not found in template. '
 
         testContext['test1'] = 1
-        self.assertEqual(test_InsertDynamicData(testTemplatePath, testContext), expectedErrMsg)
+        self.assertEqual(InsertDynamicData(testTemplatePath, testContext, pdfName, True), expectedErrMsg)
     
     def test_contextTooLarge(self):
         testContext = deepcopy(contextDict)
@@ -154,14 +108,14 @@ class TestInsertDynamicData(unittest.TestCase):
         expectedErrMsg = 'test1 was not found in template. '
 
         testContext['test1'] = 1
-        self.assertEqual(test_InsertDynamicData(testTemplatePath, testContext), expectedErrMsg)
+        self.assertEqual(InsertDynamicData(testTemplatePath, testContext, pdfName, True), expectedErrMsg)
     
     def test_contextTooSmallWithImg(self):
         testContext = deepcopy(contextDict)
         expectedErrMsg = 'Name was not found in context. '
 
         testContext.pop('Name')
-        self.assertEqual(test_InsertDynamicData(testTemplatePath, testContext), expectedErrMsg)
+        self.assertEqual(InsertDynamicData(testTemplatePath, testContext, pdfName, True), expectedErrMsg)
 
     def test_contextTooSmall(self):
         testContext = deepcopy(contextDict)
@@ -169,15 +123,15 @@ class TestInsertDynamicData(unittest.TestCase):
         expectedErrMsg = 'Name was not found in context. '
 
         testContext.pop('Name')
-        self.assertEqual(test_InsertDynamicData(testTemplatePath, testContext), expectedErrMsg)
+        self.assertEqual(InsertDynamicData(testTemplatePath, testContext, pdfName, True), expectedErrMsg)
     
     def test_successWithImg(self):
-        self.assertTrue(test_InsertDynamicData(testTemplatePath, contextDict))
+        self.assertTrue(InsertDynamicData(testTemplatePath, contextDict, pdfName, True))
     
     def test_success(self):
         testContext = deepcopy(contextDict)
         testContext.pop('Images')
-        self.assertTrue(test_InsertDynamicData(testTemplatePath, contextDict))
+        self.assertTrue(InsertDynamicData(testTemplatePath, contextDict, pdfName, True))
 
 
 if __name__ == '__main__':
