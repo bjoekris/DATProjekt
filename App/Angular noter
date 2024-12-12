@@ -1,4 +1,6 @@
 commands
+npm install jspdf
+
 
 kør web app
 ng serve
