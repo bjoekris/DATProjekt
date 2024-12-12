@@ -1,4 +1,5 @@
-from fastapi import FastAPI, File, Form, UploadFile, HTTPException
+#Bjørn
+from fastapi import FastAPI, File, Form, Header, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from docx import Document
 from docx2pdf import convert
@@ -7,7 +8,23 @@ import shutil
 
 from fastapi.responses import FileResponse
 
+from typing import Optional
+
 app = FastAPI()
+
+
+#Skal laves til database, så Keysne lægger i DB og de bliver hentet og tjekket i DB
+API_KEYS = {
+    "user1": "abc123456789",
+    "user2": "def987654321",
+}
+
+#Validering af API Key
+def validate_api_key(api_key: str) -> bool:
+    print(f"Validating API Key: {api_key}")
+    #API_KEYS.values() skal erstattes med en funktion som: get_api_keys(x_api_key, user) som sammenligner user og api_key i databasen.
+    #Evt. boolean.
+    return api_key in API_KEYS.values()
 
 app.add_middleware(
     CORSMiddleware,
@@ -54,8 +71,16 @@ async def generate_pdf(
     image: str = Form(None),
     standard_product_form: str = Form(...),
     prices: str = Form(...),
-    conditions: str = Form(...)
+    conditions: str = Form(...),
+    x_api_key: Optional[str] = Header(None)
 ):
+    
+    #godkender eller afviser api key.
+    print(f"Received x_api_key: {x_api_key}")
+    if not x_api_key or not validate_api_key(x_api_key):
+        print(f"Invalid API Key: {x_api_key}")
+        raise HTTPException(status_code=401, detail="Unauthorized: Invalid API Key")
+
     placeholders = {
         "{{full_name}}": full_name,
         "{{address}}": address,
@@ -89,13 +114,15 @@ async def generate_pdf(
         "{{conditions}}": conditions
     }
 
-    # Save the uploaded template file
+    #Gemmer word template
     template_path = "uploaded_template.docx"
     with open(template_path, "wb") as buffer:
         shutil.copyfileobj(wordTemplate.file, buffer)
 
+    #loader word template
     doc = Document(template_path)
 
+    #Erstatter placeholders med deres input værdier
     for paragraph in doc.paragraphs:
         full_text = "".join(run.text for run in paragraph.runs)
         for placeholder, value in placeholders.items():
@@ -108,14 +135,17 @@ async def generate_pdf(
             for run in paragraph.runs[1:]:
                 run.text = ""
 
+    #gemmer word fil med de indsatte værdier
     modified_docx_path = "modified_template.docx"
     doc.save(modified_docx_path)
 
+    #laver word filen til pdf
     done_pdf = "output.pdf"
     convert(modified_docx_path, done_pdf)
 
+    #fjerner midlertidige filer
     os.remove(modified_docx_path)
     os.remove(template_path)
 
+    #returnerer pdf filen til brugeren
     return FileResponse(done_pdf, media_type='application/pdf', filename="output.pdf")
-    
