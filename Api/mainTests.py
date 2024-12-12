@@ -1,7 +1,10 @@
+## Unit tests skrevet af Magnus
+
 # Used for unit testing
 import unittest
 from copy import deepcopy
 from local import *
+
 
 pdfName = 'Invoice'
 contextDict = {
@@ -93,7 +96,6 @@ contextDict = {
 testTemplatePath = 'Api/HC Andersen Flyttefirma Template.docx'
 
 
-## Unit tests skrevet af Magnus
 class TestInsertDynamicData(unittest.TestCase):
     def test_contextTooLargeWithImg(self):
         testContext = deepcopy(contextDict)
