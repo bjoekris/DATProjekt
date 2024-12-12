@@ -1,4 +1,62 @@
-{
+# Brugt til at indsætte dynamiske data i word skabelon
+from docxtpl import DocxTemplate, InlineImage
+from docx import Document
+from docx.shared import Inches
+
+# Brugt til at konvertere fra docx-format til pdf-format
+import os
+from docx2pdf import convert
+from main import *
+
+# Brugt til at finde et givent billede, fra URL
+import requests
+
+def InsertDynamicData(
+        templateStr: str,
+        context: dict,
+        pdfName: str = "Invoice",
+    ):
+    # Gemmer kopi af uploadede skabelon fil
+    templatePath = 'uploadedTemplate.docx'
+    Document(templateStr).save(templatePath)
+    
+    # Finder og åbner den kopierede skabelon som DocxTemplate objekt
+    tpl = DocxTemplate(templatePath)
+    
+    # Finder givene billeder fra URL, og ligger den i context-dictionary
+    index = 0
+    imagesToRemove = []
+    if context['Images'] != None:
+        context["InlineImages"] = []
+        for url in context['Images']:
+            image = FindImage(url, f'image{index}')
+            context['InlineImages'].append(InlineImage(tpl, image, width = Inches(context['Images'][url])))
+
+            imagesToRemove.append(f'image{index}.png')
+            index += 1
+
+    # Validere context- og skabelon-variabler
+    errMsg, valid = ValidateVariables(templatePath, context)
+    if valid == False:
+        os.remove(templatePath)
+        if context['Images'] != None:
+            for image in imagesToRemove: os.remove(image)
+        print(errMsg)
+        return errMsg
+
+    # Indsætter data fra context-dictionary til skabelon
+    tpl.render(context)
+    
+    # Gemmer og konvertere til PDF
+    tpl.save(f'{pdfName}.docx')
+    if context['Images'] != None:
+        for image in imagesToRemove: os.remove(image)
+    return ConvertDocxToPDF(pdfName, templatePath)
+
+## --------------------------------- Data --------------------------------- ##
+
+templateStr = 'API/HC Andersen Flyttefirma Template.docx'
+context = {
     "Name" : "Magnus Næhr",
     "Adress" : "Mølletoften 1",
     "City_postcode" : "Lyngby, 2800",
@@ -84,3 +142,8 @@
         }
     ]
 }
+
+## ------------------------------------------------------------------------ ##
+
+if __name__ == '__main__':
+    InsertDynamicData(templateStr, context)

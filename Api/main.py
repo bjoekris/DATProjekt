@@ -37,14 +37,11 @@ app.add_middleware(
 async def insert_dynamic_data(
         templateFile: UploadFile = File(...),
         contextFile: UploadFile = File(...),
-        imageURLFile: UploadFile = File(None),
         pdfName: str = Form("Invoice"),
     ):
     ## ----------------------------------- Skrevet af Magnus ---------------------------------------- ##
     # Ekstrahere context-dictionary og imageURLs-liste fra .json filer
     context: dict = json.loads(contextFile.file.read())
-    if imageURLFile != None: imageURLs: dict = json.loads(imageURLFile.file.read())
-    else: imageURLs = None
     ## ---------------------------------------------------------------------------------------------- ##
 
     ## ------------------------------------ Skrevet af Bjørn ---------------------------------------- ##
@@ -59,22 +56,24 @@ async def insert_dynamic_data(
     tpl = DocxTemplate(templatePath)
     
     # Finder givene billeder fra URL, og ligger den i context-dictionary
-    if imageURLs != None:
-        index = 0
-        images = []
-        for url in imageURLs:
+    index = 0
+    imagesToRemove = []
+    if context['Images'] != None:
+        context["InlineImages"] = []
+        for url in context['Images']:
             image = FindImage(url, f'image{index}')
-            
-            context[f'image{index}'] = InlineImage(tpl, image, width = Inches(imageURLs[url]))
-            
-            images.append(image)
+            context['InlineImages'].append(InlineImage(tpl, image, width = Inches(context['Images'][url])))
+
+            imagesToRemove.append(f'image{index}.png')
             index += 1
-    
+
     # Validere context- og skabelon-variabler
     errMsg, valid = ValidateVariables(templatePath, context)
     if valid == False:
         os.remove(templatePath)
-        if imageURLs != None: RemoveRenderedImages(images)
+        if context['Images'] != None:
+            for image in imagesToRemove: os.remove(image)
+        print(errMsg)
         return errMsg
 
     # Indsætter data fra context-dictionary til skabelon
@@ -82,7 +81,8 @@ async def insert_dynamic_data(
     
     # Gemmer og konvertere til PDF
     tpl.save(f'{pdfName}.docx')
-    if imageURLs != None: RemoveRenderedImages(images)
+    if context['Images'] != None:
+        for image in imagesToRemove: os.remove(image)
     return ConvertDocxToPDF(pdfName, templatePath)
     ## ---------------------------------------------------------------------------------------------- ##
 
@@ -131,7 +131,7 @@ def ValidateVariables(path: str, context: dict):
 
     # Ignoere lister, da disse godt må være tomme
     for key in context:
-        if not isinstance(context[key], list): keysNotContained.append(key)
+        if not isinstance(context[key], list) and not isinstance(context[key], dict): keysNotContained.append(key)
     
     for value in values:
         valuesNotInputted.append(value)
@@ -166,10 +166,6 @@ def FindImage(url: str, fileName: str):
     f.close()
 
     return f'{fileName}.png'
-
-def RemoveRenderedImages(images):
-    for image in images:
-        os.remove(image)
 ## -------------------------------------------------------------------------------------------------- ##
 
 ## --------------------------------------- Skrevet af Bjørn ----------------------------------------- ##

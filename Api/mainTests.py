@@ -39,6 +39,11 @@ contextDict = {
         "Dette er en detalje.",
         "Dette er også en detalje"
     ],
+    'Images' : {
+        "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fcdn.photographylife.com%2Fwp-content%2Fuploads%2F2014%2F09%2FNikon-D750-Image-Samples-2.jpg&f=1&nofb=1&ipt=a2eaec1c0ec1a1d4e001ca18ea6b952c9961567ffab5dea6ad90da52901064ca&ipo=images/" : 6,
+        "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fwww.pixelstalk.net%2Fwp-content%2Fuploads%2F2016%2F07%2F3840x2160-Images-Free-Download.jpg&f=1&nofb=1&ipt=a03ad8f692ef649662d67e3dc842a81bddcd57e2779920b188eddbc435114c4e&ipo=images" : 6,
+        "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Funiversemagazine.com%2Fwp-content%2Fuploads%2F2022%2F08%2Fzm4nfgq29yi91-1536x1536-1.jpg&f=1&nofb=1&ipt=3442c84f5326c536eb005071ed537fdbdb6fbb81e0926a9e1567a2e81cf54f9c&ipo=images" : 6
+    },
     "itemsTable" : [
         {
             "type" : "Fast pris for flytning",
@@ -84,15 +89,7 @@ contextDict = {
         }
     ]
 }
-
-testImageURL = {
-    "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fcdn.photographylife.com%2Fwp-content%2Fuploads%2F2014%2F09%2FNikon-D750-Image-Samples-2.jpg&f=1&nofb=1&ipt=a2eaec1c0ec1a1d4e001ca18ea6b952c9961567ffab5dea6ad90da52901064ca&ipo=images/" : 6,
-    "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fwww.pixelstalk.net%2Fwp-content%2Fuploads%2F2016%2F07%2F3840x2160-Images-Free-Download.jpg&f=1&nofb=1&ipt=a03ad8f692ef649662d67e3dc842a81bddcd57e2779920b188eddbc435114c4e&ipo=images" : 6,
-    "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Funiversemagazine.com%2Fwp-content%2Fuploads%2F2022%2F08%2Fzm4nfgq29yi91-1536x1536-1.jpg&f=1&nofb=1&ipt=3442c84f5326c536eb005071ed537fdbdb6fbb81e0926a9e1567a2e81cf54f9c&ipo=images" : 6
-}
-
 testTemplatePath = 'Api/HC Andersen Flyttefirma Template.docx'
-testTemplatePathWithImg = 'Api/HC Andersen Flyttefirma Template (With Images).docx'
 
 
 ## Unit tests skrevet af Magnus
@@ -100,39 +97,47 @@ testTemplatePathWithImg = 'Api/HC Andersen Flyttefirma Template (With Images).do
 # Vi bruger en test version af funktionen, da vi ikke bruger Postman til at køre vores unit tests
 # Vi kan derfor ikke sende filer, ligesom i den rigtige funktion, men er i stedet nødt til at sende datane direkte
 def test_InsertDynamicData(
-        templateFile: str,
+        templateStr: str,
         context: dict,
-        imageURLs: list = None,
         pdfName: str = "Invoice",
     ):
-    tpl = DocxTemplate(templateFile)
+    # Gemmer kopi af uploadede skabelon fil
+    templatePath = 'uploadedTemplate.docx'
+    Document(templateStr).save(templatePath)
+
+    contextKeys: list = context.keys()
     
-    if imageURLs != None:
-        index = 0
-        images = []
-        for url in imageURLs:
+    # Finder og åbner den kopierede skabelon som DocxTemplate objekt
+    tpl = DocxTemplate(templatePath)
+    
+    # Finder givene billeder fra URL, og ligger den i context-dictionary
+    index = 0
+    imagesToRemove = []
+    if contextKeys.__contains__('Images'):
+        context["InlineImages"] = []
+        for url in context['Images']:
             image = FindImage(url, f'image{index}')
-            
-            foundImage = InlineImage(tpl, image, width = Inches(imageURLs[url]))
-            
-            images.append(image)
-            context[f'image{index}'] = foundImage
-            
+            context['InlineImages'].append(InlineImage(tpl, image, width = Inches(context['Images'][url])))
+
+            imagesToRemove.append(f'image{index}.png')
             index += 1
-    
-    context = InsertPageNumbers(context, templateFile)
-    
-    errMsg, valid = ValidateVariables(templateFile, context)
+
+    # Validere context- og skabelon-variabler
+    errMsg, valid = ValidateVariables(templatePath, context)
     if valid == False:
-        if imageURLs != None: RemoveRenderedImages(images)
+        os.remove(templatePath)
+        if contextKeys.__contains__('Images'):
+            for image in imagesToRemove: os.remove(image)
         return errMsg
 
+    # Indsætter data fra context-dictionary til skabelon
     tpl.render(context)
     
+    # Gemmer og konvertere til PDF
     tpl.save(f'{pdfName}.docx')
-
-    if imageURLs != None: RemoveRenderedImages(images)
-    return ConvertDocxToPDF(pdfName, templateFile, True)
+    if contextKeys.__contains__('Images'):
+        for image in imagesToRemove: os.remove(image)
+    return ConvertDocxToPDF(pdfName, templatePath)
 
 
 class TestInsertDynamicData(unittest.TestCase):
@@ -141,10 +146,11 @@ class TestInsertDynamicData(unittest.TestCase):
         expectedErrMsg = 'test1 was not found in template. '
 
         testContext['test1'] = 1
-        self.assertEqual(test_InsertDynamicData(testTemplatePathWithImg, testContext, testImageURL), expectedErrMsg)
+        self.assertEqual(test_InsertDynamicData(testTemplatePath, testContext), expectedErrMsg)
     
     def test_contextTooLarge(self):
         testContext = deepcopy(contextDict)
+        testContext.pop('Images')
         expectedErrMsg = 'test1 was not found in template. '
 
         testContext['test1'] = 1
@@ -155,19 +161,22 @@ class TestInsertDynamicData(unittest.TestCase):
         expectedErrMsg = 'Name was not found in context. '
 
         testContext.pop('Name')
-        self.assertEqual(test_InsertDynamicData(testTemplatePathWithImg, testContext, testImageURL), expectedErrMsg)
+        self.assertEqual(test_InsertDynamicData(testTemplatePath, testContext), expectedErrMsg)
 
     def test_contextTooSmall(self):
         testContext = deepcopy(contextDict)
+        testContext.pop('Images')
         expectedErrMsg = 'Name was not found in context. '
 
         testContext.pop('Name')
         self.assertEqual(test_InsertDynamicData(testTemplatePath, testContext), expectedErrMsg)
     
     def test_successWithImg(self):
-        self.assertTrue(test_InsertDynamicData(testTemplatePathWithImg, contextDict, testImageURL))
+        self.assertTrue(test_InsertDynamicData(testTemplatePath, contextDict))
     
     def test_success(self):
+        testContext = deepcopy(contextDict)
+        testContext.pop('Images')
         self.assertTrue(test_InsertDynamicData(testTemplatePath, contextDict))
 
 
