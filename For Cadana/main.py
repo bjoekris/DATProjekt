@@ -1,7 +1,6 @@
 # Used for API calls
 from fastapi import FastAPI, Form, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
 import uvicorn
 
 # Used for converting necessarry data from .json to given datatype

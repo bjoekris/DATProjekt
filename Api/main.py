@@ -1,7 +1,6 @@
 # Brugt til API kald
 from fastapi import FastAPI, Form, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
 import uvicorn
 
 # Brugt til i konversionen af nødvændig data, ved konvertering fra .json til given datatype
@@ -9,7 +8,7 @@ import json
 import shutil
 from local import *
 
-## ------------------------------------------ Skrevet af Bjørn ---------------------------------------- ##
+## ------------------------------------------ Skrevet af Bjørn --------------------------------------- ##
 app = FastAPI()
 
 app.add_middleware(

@@ -26,7 +26,8 @@ def InsertDynamicData(
     if context.__contains__('Images'):
         context["InlineImages"] = []
         for image in context['Images']:
-            foundImage = FindImage(image["URL"], f'image{index}')
+            if image['Size'] > 7.5: return f'{image["URL"]} has size {image["Size"]}. It cannot exceed 8.'
+            foundImage = FindImage(image['URL'], f'image{index}')
             if image['Positioned'] == 'True':
                 context[f'Image{index}'] = InlineImage(tpl, foundImage, width = Inches(image["Size"]))
             else:
@@ -132,8 +133,8 @@ def ValidateVariables(path: str, context: dict):
 
 def FindImage(url: str, fileName: str):
     data = requests.get(url).content
-    f = open(f'{fileName}.png','wb')
-    f.write(data)
-    f.close()
+    path = open(f'{fileName}.png','wb')
+    path.write(data)
+    path.close()
 
     return f'{fileName}.png'

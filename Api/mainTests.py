@@ -146,6 +146,13 @@ class TestInsertDynamicData(unittest.TestCase):
         testContext['Images'].append(unrecognizedURL)
         self.assertEqual(InsertDynamicData(testTemplatePath, testContext, pdfName, True), expectedErrMsg)
     
+    def test_ImageTooBig(self):
+        testContext = deepcopy(contextDict)
+        
+        testContext['Images'][0]['Size'] = 8
+        expectedErrMsg = f'{testContext["Images"][0]["URL"]} has size {testContext["Images"][0]["Size"]}. It cannot exceed 8.'
+        self.assertEqual(InsertDynamicData(testTemplatePath, testContext, pdfName, True), expectedErrMsg)
+    
     def test_success(self):
         self.assertTrue(InsertDynamicData(testTemplatePath, contextDict, pdfName, True))
 

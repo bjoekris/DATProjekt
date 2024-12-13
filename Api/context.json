@@ -37,7 +37,7 @@
     "Images" : [
         {
             "URL" : "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fimages.pexels.com%2Fphotos%2F531880%2Fpexels-photo-531880.jpeg%3Fcs%3Dsrgb%26dl%3Dbackground-blur-clean-531880.jpg%26fm%3Djpg&f=1&nofb=1&ipt=6dc28c715695b202c12650be7c673ea6b750959b55b46b01369168065453ab6b&ipo=images",
-            "Size" : 4,
+            "Size" : 7.5,
             "Positioned" : "True"
         },
         {
@@ -60,7 +60,6 @@
             "Size" : 4,
             "Positioned" : "False"
         }
-        
     ],
     "itemsTable" : [
         {
