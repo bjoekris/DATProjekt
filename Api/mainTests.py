@@ -43,11 +43,34 @@ contextDict = {
         "Dette er en detalje.",
         "Dette er også en detalje"
     ],
-    'Images' : {
-        "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fcdn.photographylife.com%2Fwp-content%2Fuploads%2F2014%2F09%2FNikon-D750-Image-Samples-2.jpg&f=1&nofb=1&ipt=a2eaec1c0ec1a1d4e001ca18ea6b952c9961567ffab5dea6ad90da52901064ca&ipo=images/" : 6,
-        "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fwww.pixelstalk.net%2Fwp-content%2Fuploads%2F2016%2F07%2F3840x2160-Images-Free-Download.jpg&f=1&nofb=1&ipt=a03ad8f692ef649662d67e3dc842a81bddcd57e2779920b188eddbc435114c4e&ipo=images" : 6,
-        "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Funiversemagazine.com%2Fwp-content%2Fuploads%2F2022%2F08%2Fzm4nfgq29yi91-1536x1536-1.jpg&f=1&nofb=1&ipt=3442c84f5326c536eb005071ed537fdbdb6fbb81e0926a9e1567a2e81cf54f9c&ipo=images" : 6
-    },
+    "Images" : [
+        {
+            "URL" : "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fimages.pexels.com%2Fphotos%2F531880%2Fpexels-photo-531880.jpeg%3Fcs%3Dsrgb%26dl%3Dbackground-blur-clean-531880.jpg%26fm%3Djpg&f=1&nofb=1&ipt=6dc28c715695b202c12650be7c673ea6b750959b55b46b01369168065453ab6b&ipo=images",
+            "Size" : 4,
+            "Positioned" : "True"
+        },
+        {
+            "URL" : "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fsoftauthor.com%2Fwp-content%2Fuploads%2F2021%2F08%2FCSS-Background-Image-Full-Screent-With-background-Image-1536x1355.png&f=1&nofb=1&ipt=735b1a81221f3a52f64f975dbba2b30e6f37a6cd8896b74c582fb0b57ec05eaa&ipo=images",
+            "Size" : 5,
+            "Positioned" : "True"
+        },
+        {
+            "URL" : "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fcdn.photographylife.com%2Fwp-content%2Fuploads%2F2014%2F09%2FNikon-D750-Image-Samples-2.jpg&f=1&nofb=1&ipt=a2eaec1c0ec1a1d4e001ca18ea6b952c9961567ffab5dea6ad90da52901064ca&ipo=images/",
+            "Size" : 5,
+            "Positioned" : "False"
+        },
+        {
+            "URL" : "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fwww.pixelstalk.net%2Fwp-content%2Fuploads%2F2016%2F07%2F3840x2160-Images-Free-Download.jpg&f=1&nofb=1&ipt=a03ad8f692ef649662d67e3dc842a81bddcd57e2779920b188eddbc435114c4e&ipo=images",
+            "Size" : 5,
+            "Positioned" : "False"
+        },
+        {
+            "URL" : "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Funiversemagazine.com%2Fwp-content%2Fuploads%2F2022%2F08%2Fzm4nfgq29yi91-1536x1536-1.jpg&f=1&nofb=1&ipt=3442c84f5326c536eb005071ed537fdbdb6fbb81e0926a9e1567a2e81cf54f9c&ipo=images",
+            "Size" : 4,
+            "Positioned" : "False"
+        }
+        
+    ],
     "itemsTable" : [
         {
             "type" : "Fast pris for flytning",
@@ -94,45 +117,36 @@ contextDict = {
     ]
 }
 testTemplatePath = 'Api/HC Andersen Flyttefirma Template.docx'
+unrecognizedURL = {
+    "URL" : "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fdeep-image.ai%2Fblog%2Fcontent%2Fimages%2F2022%2F08%2Fmagic-g1db898374_1920.jpg&f=1&nofb=1&ipt=2d95234c287643e34db97a9571042b7f13574bf5038f7f1bd0b45c9fce762519&ipo=images",
+    "Size" : 4,
+    "Positioned" : "False"
+}
 
 
 class TestInsertDynamicData(unittest.TestCase):
-    def test_contextTooLargeWithImg(self):
-        testContext = deepcopy(contextDict)
-        expectedErrMsg = 'test1 was not found in template. '
-
-        testContext['test1'] = 1
-        self.assertEqual(InsertDynamicData(testTemplatePath, testContext, pdfName, True), expectedErrMsg)
-    
     def test_contextTooLarge(self):
         testContext = deepcopy(contextDict)
-        testContext.pop('Images')
         expectedErrMsg = 'test1 was not found in template. '
 
         testContext['test1'] = 1
         self.assertEqual(InsertDynamicData(testTemplatePath, testContext, pdfName, True), expectedErrMsg)
     
-    def test_contextTooSmallWithImg(self):
-        testContext = deepcopy(contextDict)
-        expectedErrMsg = 'Name was not found in context. '
-
-        testContext.pop('Name')
-        self.assertEqual(InsertDynamicData(testTemplatePath, testContext, pdfName, True), expectedErrMsg)
-
     def test_contextTooSmall(self):
         testContext = deepcopy(contextDict)
-        testContext.pop('Images')
         expectedErrMsg = 'Name was not found in context. '
 
         testContext.pop('Name')
         self.assertEqual(InsertDynamicData(testTemplatePath, testContext, pdfName, True), expectedErrMsg)
     
-    def test_successWithImg(self):
-        self.assertTrue(InsertDynamicData(testTemplatePath, contextDict, pdfName, True))
+    def test_URLError(self):
+        testContext = deepcopy(contextDict)
+        expectedErrMsg = 'One, or more, URLs are causing errors.'
+
+        testContext['Images'].append(unrecognizedURL)
+        self.assertEqual(InsertDynamicData(testTemplatePath, testContext, pdfName, True), expectedErrMsg)
     
     def test_success(self):
-        testContext = deepcopy(contextDict)
-        testContext.pop('Images')
         self.assertTrue(InsertDynamicData(testTemplatePath, contextDict, pdfName, True))
 
 
