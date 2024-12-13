@@ -69,7 +69,6 @@ contextDict = {
             "Size" : 4,
             "Positioned" : "False"
         }
-        
     ],
     "itemsTable" : [
         {
