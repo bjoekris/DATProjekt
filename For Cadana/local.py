@@ -1,14 +1,14 @@
-# Brugt til at indsætte dynamiske data i word skabelon
+# Used for inserting dynamic data to word template
 from docxtpl import DocxTemplate, InlineImage
 from docx import Document
 from docx.shared import Inches
 from fastapi.responses import FileResponse
 
-# Brugt til at konvertere fra docx-format til pdf-format
+# Used for converting from docx to pdf
 import os
 from docx2pdf import convert
 
-# Brugt til at finde et givent billede, fra URL
+# Used for retrieving image files from URL
 import requests
 
 def InsertDynamicData(
@@ -17,11 +17,10 @@ def InsertDynamicData(
         pdfName: str,
         isTest: bool = False,
     ):
-    ## -------------------------------------- Skrevet af Magnus -------------------------------------- ##
-    # Finder og åbner den kopierede skabelon som DocxTemplate objekt
+    # Finds and open the copied template as a DocxTemplate object
     tpl = DocxTemplate(templatePath)
     
-    # Finder givene billeder fra URL, og ligger den i context-dictionary
+    # Finds images from URL and puts them into the context-dictionary
     index = 0
     imagesToRemove = []
     if context.__contains__('Images'):
@@ -37,7 +36,7 @@ def InsertDynamicData(
             index += 1
         context.pop('Images')
 
-    # Validere context- og skabelon-variabler
+    # Validates the context- and template-variables
     errMsg, valid = ValidateVariables(templatePath, context)
     if valid == False:
         if isTest == False: os.remove(templatePath)
@@ -46,7 +45,7 @@ def InsertDynamicData(
         if isTest == True: print(errMsg)
         return errMsg
 
-    # Indsætter data fra context-dictionary til skabelon
+    # Inserts data from the context-dictionary to the template
     try:
         tpl.render(context)
     except Exception:
@@ -57,26 +56,20 @@ def InsertDynamicData(
         if isTest == True: print(errMsg)
         return errMsg
     
-    # Gemmer og konvertere til PDF
+    # Saves and converts to PDF
     tpl.save(f'{pdfName}.docx')
     if len(imagesToRemove) > 0:
         for image in imagesToRemove: os.remove(image)
-    # Returnere færdig PDF
+    # Returns final PDF
     return ConvertDocxToPDF(pdfName, templatePath, isTest)
-    ## ---------------------------------------------------------------------------------------------- ##
-
-## ---------------------------------------- Skrevet af Magnus --------------------------------------- ##
+    
 def ConvertDocxToPDF(path: str, templatePath: str, isTest: bool):
     convert(f'{path}.docx', f'{path}.pdf')
     os.remove(f'{path}.docx')
     if isTest == False: os.remove(templatePath)
-    ## ---------------------------------------------------------------------------------------------- ##
 
-    ## ------------------------------------ Skrevet af Bjørn ---------------------------------------- ##
     return FileResponse(f'{path}.pdf', media_type = 'application/pdf', filename = path)
-    ## ---------------------------------------------------------------------------------------------- ##
 
-## ---------------------------------------- Skrevet af Magnus --------------------------------------- ##
 def ValidateVariables(path: str, context: dict):
     doc = Document(path)
     valid = True
@@ -88,8 +81,8 @@ def ValidateVariables(path: str, context: dict):
     valuesInputted = []
 
     for p in doc.paragraphs:
-        # Alle variabler i skabelonet starter med "{{"
-        # Derfor kan man finde alle variabler ved at lede gennem alt tekst i dokumentet efter disse
+        # All variables in the template must start with "{{"
+        # We can therefore identify the variables, by searching the document for these
         if p.text.__contains__('{{') and not (p.text.__contains__('{% for') or p.text.__contains__('{% endfor')):
             tempValues = p.text.rsplit('{{')
 
@@ -97,7 +90,7 @@ def ValidateVariables(path: str, context: dict):
                 if not temp.__contains__('}}'):
                     tempValues.remove(temp)
 
-            # Isolere skabelon-variablerne fra de sidste klammer, så de kan sammenlignes med context-variablerne
+            # Isolates the template-variables, so only the text part is stored
             foundValues = []
             for i in range(len(tempValues)):
                 tempValue = tempValues[i].split('}}')[0]
@@ -107,9 +100,9 @@ def ValidateVariables(path: str, context: dict):
                 if not values.__contains__(value):
                     values.append(value)
 
-    # Ignoere lister, da disse godt må være tomme
+    # Ignores lists, since the are allowed to be empty
     for key in context:
-        if not isinstance(context[key], list): keysNotContained.append(key)
+        if not isinstance(context[key], list) and not isinstance(context[key], dict): keysNotContained.append(key)
     
     for value in values:
         valuesNotInputted.append(value)
@@ -123,7 +116,7 @@ def ValidateVariables(path: str, context: dict):
                 valuesInputted.append(value)
                 valuesNotInputted.remove(value)
     
-    # Bygger exception-string, så den kan returneres til brugeren
+    # Builds the exception string, so it can be returned to the user
     errorMsg = ''
     if not len(keysNotContained) == 0:
         for key in keysNotContained:
@@ -144,4 +137,3 @@ def FindImage(url: str, fileName: str):
     f.close()
 
     return f'{fileName}.png'
-## -------------------------------------------------------------------------------------------------- ##

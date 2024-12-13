@@ -56,7 +56,7 @@ async def insert_dynamic_data(
 
 
     ## -------------------------------------- Skrevet af Magnus -------------------------------------- ##
-    # Ekstrahere context-dictionary og imageURLs-liste fra .json filer
+    # Ekstrahere context-dictionary fra .json filen
     context: dict = json.loads(contextFile.file.read())
     ## ----------------------------------------------------------------------------------------------- ##
 
