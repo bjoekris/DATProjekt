@@ -1,4 +1,13 @@
-{
+## Unit tests skrevet af Magnus
+
+# Used for unit testing
+import unittest
+from copy import deepcopy
+from local import *
+
+
+pdfName = 'Invoice'
+contextDict = {
     "Name" : "Magnus Næhr",
     "Adress" : "Mølletoften 1",
     "City_postcode" : "Lyngby, 2800",
@@ -37,7 +46,7 @@
     "Images" : [
         {
             "URL" : "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fimages.pexels.com%2Fphotos%2F531880%2Fpexels-photo-531880.jpeg%3Fcs%3Dsrgb%26dl%3Dbackground-blur-clean-531880.jpg%26fm%3Djpg&f=1&nofb=1&ipt=6dc28c715695b202c12650be7c673ea6b750959b55b46b01369168065453ab6b&ipo=images",
-            "Size" : 7.5,
+            "Size" : 4,
             "Positioned" : "True"
         },
         {
@@ -106,3 +115,46 @@
         }
     ]
 }
+testTemplatePath = 'Api/HC Andersen Flyttefirma Template.docx'
+unrecognizedURL = {
+    "URL" : "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fdeep-image.ai%2Fblog%2Fcontent%2Fimages%2F2022%2F08%2Fmagic-g1db898374_1920.jpg&f=1&nofb=1&ipt=2d95234c287643e34db97a9571042b7f13574bf5038f7f1bd0b45c9fce762519&ipo=images",
+    "Size" : 4,
+    "Positioned" : "False"
+}
+
+
+class TestInsertDynamicData(unittest.TestCase):
+    def test_contextTooLarge(self):
+        testContext = deepcopy(contextDict)
+        expectedErrMsg = 'test1 was not found in template. '
+
+        testContext['test1'] = 1
+        self.assertEqual(InsertDynamicData(testTemplatePath, testContext, pdfName, True), expectedErrMsg)
+    
+    def test_contextTooSmall(self):
+        testContext = deepcopy(contextDict)
+        expectedErrMsg = 'Name was not found in context. '
+
+        testContext.pop('Name')
+        self.assertEqual(InsertDynamicData(testTemplatePath, testContext, pdfName, True), expectedErrMsg)
+    
+    def test_URLError(self):
+        testContext = deepcopy(contextDict)
+        expectedErrMsg = 'One, or more, URLs are causing errors.'
+
+        testContext['Images'].append(unrecognizedURL)
+        self.assertEqual(InsertDynamicData(testTemplatePath, testContext, pdfName, True), expectedErrMsg)
+    
+    def test_ImageTooBig(self):
+        testContext = deepcopy(contextDict)
+        
+        testContext['Images'][0]['Size'] = 8
+        expectedErrMsg = f'{testContext["Images"][0]["URL"]} has size {testContext["Images"][0]["Size"]}. It cannot exceed 8.'
+        self.assertEqual(InsertDynamicData(testTemplatePath, testContext, pdfName, True), expectedErrMsg)
+    
+    def test_success(self):
+        self.assertTrue(InsertDynamicData(testTemplatePath, contextDict, pdfName, True))
+
+
+if __name__ == '__main__':
+    unittest.main()

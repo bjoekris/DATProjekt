@@ -1,0 +1,21 @@
+commands
+npm install jspdf
+
+
+kør web app
+ng serve
+
+create en component
+ng generate component "komponentens navn"
+
+
+
+
+Angular command line interface
+npm install -g @angular/cli
+
+check angular version
+ng version
+
+liste af filer i mappen
+ls
