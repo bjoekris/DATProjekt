@@ -1,8 +1,7 @@
-# Brugt til API kald
-from fastapi import FastAPI, Form, File,Header,HTTPException, UploadFile
+# Brugt til API
+from fastapi import FastAPI, Form, File, Header, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
-
 import logging
 
 # Brugt til i konversionen af nødvændig data, ved konvertering fra .json til given datatype
@@ -25,13 +24,13 @@ app.add_middleware(
 logging.basicConfig(level=logging.INFO)
 
 
-# API keys for validation
+# API nøgler til validering
 API_KEYS = {
     'user1': 'abc123456789',
     'user2': 'def987654321',
 }
 
-# Function to validate API key
+# Funktion til at validere API nøgle
 def validate_api_key(api_key: str) -> bool:
     return api_key in API_KEYS.values()
 ## --------------------------------------------------------------------------------------------------- ##
@@ -44,6 +43,7 @@ async def insert_dynamic_data(
         pdfName: str = Form('Invoice'),
         x_api_key: str = Header(None),
     ):
+    ## --------------------------------------- Skrevet af Bjørn -------------------------------------- ##
     logging.info('Received request to /insert-dynamic-data/')
 
      # Validate API key
@@ -51,7 +51,7 @@ async def insert_dynamic_data(
         raise HTTPException(status_code = 401, detail = 'Unauthorized: Invalid API Key')
 
     logging.info('API Key validated.')
-
+    ## ----------------------------------------------------------------------------------------------- ##
 
     ## -------------------------------------- Skrevet af Magnus -------------------------------------- ##
     # Ekstrahere context-dictionary fra .json filen
