@@ -4,6 +4,7 @@
 import unittest
 from copy import deepcopy
 from local import *
+import pathlib as pl
 
 
 pdfName = 'Invoice'
@@ -124,37 +125,52 @@ unrecognizedURL = {
 
 
 class TestInsertDynamicData(unittest.TestCase):
+    def test_isImagesRemoved(self):
+        testContext = deepcopy(contextDict)
+
+        InsertDynamicData(testTemplatePath, testContext, pdfName, True)
+
+        for i in range(len(testContext["Images"])):
+            path = pl.Path(f'image{i}.png')
+            self.assertEqual((str(path), path.is_file()), (str(path), False))
+
     def test_contextTooLarge(self):
         testContext = deepcopy(contextDict)
-        expectedErrMsg = 'test1 was not found in template. '
 
         testContext['test1'] = 1
-        self.assertEqual(InsertDynamicData(testTemplatePath, testContext, pdfName, True), expectedErrMsg)
+
+        with self.assertRaises(Exception):
+            InsertDynamicData(testTemplatePath, testContext, pdfName, True)
     
     def test_contextTooSmall(self):
         testContext = deepcopy(contextDict)
-        expectedErrMsg = 'Name was not found in context. '
 
         testContext.pop('Name')
-        self.assertEqual(InsertDynamicData(testTemplatePath, testContext, pdfName, True), expectedErrMsg)
+
+        with self.assertRaises(Exception):
+            InsertDynamicData(testTemplatePath, testContext, pdfName, True)
     
     def test_URLError(self):
         testContext = deepcopy(contextDict)
-        expectedErrMsg = 'One, or more, URLs are causing errors.'
 
         testContext['Images'].append(unrecognizedURL)
-        self.assertEqual(InsertDynamicData(testTemplatePath, testContext, pdfName, True), expectedErrMsg)
+
+        with self.assertRaises(Exception):
+            InsertDynamicData(testTemplatePath, testContext, pdfName, True)
     
     def test_ImageTooBig(self):
         testContext = deepcopy(contextDict)
         
         testContext['Images'][0]['Size'] = 8
-        expectedErrMsg = f'{testContext["Images"][0]["URL"]} has size {testContext["Images"][0]["Size"]}. It cannot exceed 8.'
-        self.assertEqual(InsertDynamicData(testTemplatePath, testContext, pdfName, True), expectedErrMsg)
+
+        with self.assertRaises(Exception):
+            InsertDynamicData(testTemplatePath, testContext, pdfName, True)
     
     def test_success(self):
-        self.assertTrue(InsertDynamicData(testTemplatePath, contextDict, pdfName, True))
+        pass
+        testContext = deepcopy(contextDict)
 
+        self.assertTrue(InsertDynamicData(testTemplatePath, testContext, pdfName, True))
 
 if __name__ == '__main__':
     unittest.main()
