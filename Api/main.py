@@ -4,7 +4,7 @@
 # pip install python-docx
 
 # Used for API calls
-from fastapi import FastAPI, Form, File, UploadFile
+from fastapi import FastAPI, Form, File, Header, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
@@ -27,6 +27,18 @@ from copy import deepcopy
 
 app = FastAPI()
 
+#Bjørn - Api Keys. Skal puttes i Database
+API_KEYS = {
+    "user1": "abc123456789",
+    "user2": "def987654321",
+}
+
+#Bjørn - Validering af API key
+def validate_api_key(api_key: str) -> bool:
+    #API_KEYS.values() skal erstattes med en funktion som: get_api_keys(x_api_key, user) som sammenligner user og api_key i databasen.
+    #Evt. boolean.
+    return api_key in API_KEYS.values()
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -41,7 +53,15 @@ async def insert_dynamic_data(
         pdfName: str = Form(...),
         contextFile: UploadFile = File(...),
         images: list[UploadFile] = File(None),
+        x_api_key: str = Header(None)
     ):
+
+    # Validates the API key
+    if not x_api_key or not validate_api_key(x_api_key):
+        raise HTTPException(status_code=401, detail="Unauthorized: Invalid API Key")
+
+
+
     # Extracts the context-dictionary from .json file
     context = json.loads(contextFile.file.read())
     
