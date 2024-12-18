@@ -26,7 +26,6 @@ def InsertDynamicData(
     index = 0
     imagesToRemove = []
     if context.__contains__('Images'):
-        context['InlineImages'] = []
         for image in context['Images']:
             if image['Size'] > 7.5:
                 raise HTTPException(status_code = 400, details = f'{image["URL"]} has size {image["Size"]}. It cannot exceed 8.')
@@ -36,7 +35,10 @@ def InsertDynamicData(
                 context[f'Image{index}'] = InlineImage(tpl, foundImage, width = Inches(image['Size']))
             
             else:
-                context['InlineImages'].append(InlineImage(tpl, foundImage, width = Inches(image['Size'])))
+                if not context.__contains__(f'Images{image["List"]}'):
+                    context[f'Images{image["List"]}'] = []
+                
+                context[f'Images{image["List"]}'].append(InlineImage(tpl, foundImage, width = Inches(image['Size'])))
 
             imagesToRemove.append(f'image{index}.png')
             index += 1
@@ -44,17 +46,17 @@ def InsertDynamicData(
         context.pop('Images')
 
     # Validere context- og skabelon-variabler
-    errMsg, valid = ValidateVariables(templatePath, context)
-    if valid == False:
-        if isTest == False:
-            os.remove(templatePath)
+    # errMsg, valid = ValidateVariables(templatePath, context)
+    # if valid == False:
+    #     if isTest == False:
+    #         os.remove(templatePath)
         
-        if len(imagesToRemove) > 0:
-            for image in imagesToRemove: os.remove(image)
+    #     if len(imagesToRemove) > 0:
+    #         for image in imagesToRemove: os.remove(image)
         
-        if isTest == True: print(errMsg)
+    #     if isTest == True: print(errMsg)
         
-        raise HTTPException(status_code = 400, detail = errMsg)
+    #     raise HTTPException(status_code = 400, detail = errMsg)
 
     # Indsætter data fra context-dictionary til skabelon
     try:

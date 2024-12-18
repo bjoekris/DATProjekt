@@ -10,7 +10,7 @@ import json
 
 pdfName = 'Invoice'
 testTemplatePath = 'Api/HC Andersen Flyttefirma Template.docx'
-with open('Api/context.json') as jsonString:
+with open('Api/contextHC.json') as jsonString:
     contextDict: dict = json.load(jsonString)
 
 unrecognizedURL = {
