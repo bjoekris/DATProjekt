@@ -71,5 +71,5 @@ class TestInsertDynamicData(unittest.TestCase):
 
         self.assertTrue(InsertDynamicData(testTemplatePath, testContext, pdfName, True))
 
-if __name__ == '__main__':
-    unittest.main()
+#if __name__ == '__main__':
+ #   unittest.main()

@@ -1,12 +1,41 @@
 import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { saveAs } from 'file-saver';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
   templateUrl: './app.component.html',
-  styleUrl: './app.component.css'
+  styleUrls: ['./app.component.css']
 })
 export class AppComponent {
-  title = 'App';
+  templateFile: File | null = null;
+  formData: any = {};
+
+  constructor(private http: HttpClient) {}
+
+  onFileChange(event: any) {
+    this.templateFile = event.target.files[0];
+  }
+
+  onSubmit() {
+    if (!this.templateFile) {
+      alert('Please upload a template file.');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('templateFile', this.templateFile);
+    formData.append('contextFile', new Blob([JSON.stringify(this.formData)], { type: 'application/json' }));
+
+    const headers = new HttpHeaders({
+      'x-api-key': 'your-api-key-here'
+    });
+
+    this.http.post('/insert-dynamic-data/', formData, { headers, responseType: 'blob' })
+      .subscribe(response => {
+        saveAs(response, 'generated.pdf');
+      }, error => {
+        console.error('Error generating PDF:', error);
+      });
+  }
 }

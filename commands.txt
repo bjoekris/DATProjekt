@@ -15,3 +15,6 @@
 # pip install docxtpl
 # pip install docx2pdf
 # pip install python-docx
+
+For filesaving in angular app.
+npm install file-saver
