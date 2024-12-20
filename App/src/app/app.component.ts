@@ -1,15 +1,21 @@
 import { Component } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { HttpClient, HttpClientModule, HttpHeaders } from '@angular/common/http';
 import { saveAs } from 'file-saver';
 
 @Component({
   selector: 'app-root',
+  standalone: true,
+  imports: [CommonModule, FormsModule, HttpClientModule],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css']
 })
 export class AppComponent {
   templateFile: File | null = null;
   formData: any = {};
+  dynamicFields: string[] = []; // Add this line to define dynamicFields
+  title = 'App';
 
   constructor(private http: HttpClient) {}
 
