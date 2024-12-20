@@ -3,6 +3,7 @@ from docxtpl import DocxTemplate, InlineImage
 from docx import Document
 from docx.shared import Inches
 from fastapi.responses import FileResponse
+from fastapi import HTTPException
 
 # Used for converting from docx to pdf
 import os
@@ -24,43 +25,57 @@ def InsertDynamicData(
     index = 0
     imagesToRemove = []
     if context.__contains__('Images'):
-        context["InlineImages"] = []
+        context['InlineImages'] = []
         for image in context['Images']:
-            if image['Size'] > 7.5: return f'{image["URL"]} has size {image["Size"]}. It cannot exceed 8.'
+            if image['Size'] > 7.5:
+                raise HTTPException(status_code = 400, details = f'{image["URL"]} has size {image["Size"]}. It cannot exceed 8.')
+            
             foundImage = FindImage(image['URL'], f'image{index}')
             if image['Positioned'] == 'True':
-                context[f'Image{index}'] = InlineImage(tpl, foundImage, width = Inches(image["Size"]))
+                context[f'Image{index}'] = InlineImage(tpl, foundImage, width = Inches(image['Size']))
+            
             else:
-                context['InlineImages'].append(InlineImage(tpl, foundImage, width = Inches(image["Size"])))
+                context['InlineImages'].append(InlineImage(tpl, foundImage, width = Inches(image['Size'])))
 
             imagesToRemove.append(f'image{index}.png')
             index += 1
+        
         context.pop('Images')
 
     # Validates the context- and template-variables
     errMsg, valid = ValidateVariables(templatePath, context)
     if valid == False:
-        if isTest == False: os.remove(templatePath)
+        if isTest == False:
+            os.remove(templatePath)
+        
         if len(imagesToRemove) > 0:
             for image in imagesToRemove: os.remove(image)
+        
         if isTest == True: print(errMsg)
-        return errMsg
+        
+        raise HTTPException(status_code = 400, detail = errMsg)
 
     # Inserts data from the context-dictionary to the template
     try:
         tpl.render(context)
+    
     except Exception:
         errMsg = 'One, or more, URLs are causing errors.'
-        if isTest == False: os.remove(templatePath)
+        if isTest == False:
+            os.remove(templatePath)
+        
         if len(imagesToRemove) > 0:
             for image in imagesToRemove: os.remove(image)
+        
         if isTest == True: print(errMsg)
-        return errMsg
+        
+        raise HTTPException(status_code = 400, detail = errMsg)
     
     # Saves and converts to PDF
     tpl.save(f'{pdfName}.docx')
     if len(imagesToRemove) > 0:
         for image in imagesToRemove: os.remove(image)
+    
     # Returns final PDF
     return ConvertDocxToPDF(pdfName, templatePath, isTest)
     
@@ -122,11 +137,13 @@ def ValidateVariables(path: str, context: dict):
     if not len(keysNotContained) == 0:
         for key in keysNotContained:
             errorMsg += f'{key} was not found in template. '
+        
         valid = False
     
     if not len(valuesNotInputted) == 0:
         for value in valuesNotInputted:
             errorMsg += f'{value} was not found in context. '
+        
         valid = False
     
     return errorMsg, valid
