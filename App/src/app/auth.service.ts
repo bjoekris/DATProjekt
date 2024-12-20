@@ -9,6 +9,10 @@ export class AuthService {
     private baseUrl = 'http://localhost:3000';
 
     constructor(private http: HttpClient) {}
+    // constructor(private http: HttpClient) {
+    //     console.log('HttpClient injected:', this.http);
+    //   }
+      
 
     login(username: string, password: string): Observable<any> {
         return this.http.post(`${this.baseUrl}/login`, { username, password });
