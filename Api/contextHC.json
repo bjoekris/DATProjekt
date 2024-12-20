@@ -37,29 +37,41 @@
     "Images" : [
         {
             "URL" : "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fimages.pexels.com%2Fphotos%2F531880%2Fpexels-photo-531880.jpeg%3Fcs%3Dsrgb%26dl%3Dbackground-blur-clean-531880.jpg%26fm%3Djpg&f=1&nofb=1&ipt=6dc28c715695b202c12650be7c673ea6b750959b55b46b01369168065453ab6b&ipo=images",
-            "Size" : 4,
-            "Positioned" : "True"
+            "Size" : 150,
+            "Width" : 0,
+            "Height" : 0,
+            "Positioned" : "True",
+            "List" : 0
         },
         {
             "URL" : "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fsoftauthor.com%2Fwp-content%2Fuploads%2F2021%2F08%2FCSS-Background-Image-Full-Screent-With-background-Image-1536x1355.png&f=1&nofb=1&ipt=735b1a81221f3a52f64f975dbba2b30e6f37a6cd8896b74c582fb0b57ec05eaa&ipo=images",
-            "Size" : 5,
-            "Positioned" : "True"
+            "Size" : 0,
+            "Width" : 150,
+            "Height" : 0,
+            "Positioned" : "True",
+            "List" : 0
         },
         {
             "URL" : "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fcdn.photographylife.com%2Fwp-content%2Fuploads%2F2014%2F09%2FNikon-D750-Image-Samples-2.jpg&f=1&nofb=1&ipt=a2eaec1c0ec1a1d4e001ca18ea6b952c9961567ffab5dea6ad90da52901064ca&ipo=images/",
-            "Size" : 5,
+            "Size" : 0,
+            "Width" : 0,
+            "Height" : 85,
             "Positioned" : "False",
             "List" : 1
         },
         {
             "URL" : "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fwww.pixelstalk.net%2Fwp-content%2Fuploads%2F2016%2F07%2F3840x2160-Images-Free-Download.jpg&f=1&nofb=1&ipt=a03ad8f692ef649662d67e3dc842a81bddcd57e2779920b188eddbc435114c4e&ipo=images",
-            "Size" : 5,
+            "Size" : 0,
+            "Width" : 170,
+            "Height" : 0,
             "Positioned" : "False",
             "List" : 1
         },
         {
             "URL" : "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Funiversemagazine.com%2Fwp-content%2Fuploads%2F2022%2F08%2Fzm4nfgq29yi91-1536x1536-1.jpg&f=1&nofb=1&ipt=3442c84f5326c536eb005071ed537fdbdb6fbb81e0926a9e1567a2e81cf54f9c&ipo=images",
-            "Size" : 4,
+            "Size" : 0,
+            "Width" : 0,
+            "Height" : 125,
             "Positioned" : "False",
             "List" : 1
         }

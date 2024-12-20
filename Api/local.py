@@ -1,9 +1,10 @@
 # Brugt til at indsætte dynamiske data i word skabelon
 from docxtpl import DocxTemplate, InlineImage
 from docx import Document
-from docx.shared import Inches
+from docx.shared import Mm
 from fastapi.responses import FileResponse
 from fastapi import HTTPException
+from PIL import Image
 
 # Brugt til at konvertere fra docx-format til pdf-format
 import os
@@ -23,28 +24,60 @@ def InsertDynamicData(
     tpl = DocxTemplate(templatePath)
     
     # Finder givene billeder fra URL, og ligger den i context-dictionary
-    index = 0
-    imagesToRemove = []
     if context.__contains__('Images'):
+        index = 0
+        imagesToRemove = []
+        
         for image in context['Images']:
-            if image['Size'] > 7.5:
-                raise HTTPException(status_code = 400, details = f'{image["URL"]} has size {image["Size"]}. It cannot exceed 8.')
-            
+            print(len(context['Images']))
             foundImage = FindImage(image['URL'], f'image{index}')
+            templateImage = InlineImage(tpl, foundImage)
+
+            img = Image.open(foundImage)
+            print(foundImage)
+
+            if image['Size'] > image['Width'] and image['Size'] > image['Height'] and image['Size'] > 0:
+                if img.width > img.height:
+                    templateImage = InlineImage(tpl, foundImage, width = Mm(image['Size']))
+
+                elif image['Size'] > 0:
+                    templateImage = InlineImage(tpl, foundImage, height = Mm(image['Size']))
+                
+                else:
+                    raise HTTPException(status_code = 400, detail = 'Image Size was not expected to be 0')
+
+            else:
+                if image['Width'] > image['Height'] and image['Width'] > 0:
+                    templateImage = InlineImage(tpl, foundImage, width = Mm(image['Width']))
+
+                elif image['Height'] > 0:
+                    templateImage = InlineImage(tpl, foundImage, height = Mm(image['Height']))
+                
+                else:
+                    raise HTTPException(status_code = 400, detail = 'Image Height and Width was not expected to both be 0')
+
+            img.close()
+
+            if templateImage.width >= Mm(170):
+                raise HTTPException(status_code = 400, detail = f'{image["URL"]} has a width of {templateImage.width}. It cannot exceed 170.')
+
+            if templateImage.height >= Mm(125):
+                raise HTTPException(status_code = 400, detail = f'{image["URL"]} has a height of {templateImage.height}. It cannot exceed 125.')
+
             if image['Positioned'] == 'True':
-                context[f'Image{index}'] = InlineImage(tpl, foundImage, width = Inches(image['Size']))
+                context[f'Image{index}'] = templateImage
             
             else:
                 if not context.__contains__(f'Images{image["List"]}'):
                     context[f'Images{image["List"]}'] = []
                 
-                context[f'Images{image["List"]}'].append(InlineImage(tpl, foundImage, width = Inches(image['Size'])))
+                context[f'Images{image["List"]}'].append(templateImage)
 
             imagesToRemove.append(f'image{index}.png')
             index += 1
-        
+            
         context.pop('Images')
-
+    
     # Validere context- og skabelon-variabler
     # errMsg, valid = ValidateVariables(templatePath, context)
     # if valid == False:

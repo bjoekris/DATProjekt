@@ -38,10 +38,18 @@ class TestInsertDynamicData(unittest.TestCase):
         with self.assertRaises(Exception):
             InsertDynamicData(testTemplatePath, testContext, pdfName, True)
     
-    def test_ImageTooBig(self):
+    def test_ImageTooWide(self):
         testContext = deepcopy(contextDict)
         
-        testContext['Images'][0]['Size'] = 8
+        testContext['Images'][0]['Width'] = 171
+
+        with self.assertRaises(Exception):
+            InsertDynamicData(testTemplatePath, testContext, pdfName, True)
+    
+    def test_ImageTooTall(self):
+        testContext = deepcopy(contextDict)
+        
+        testContext['Images'][0]['Height'] = 126
 
         with self.assertRaises(Exception):
             InsertDynamicData(testTemplatePath, testContext, pdfName, True)
@@ -66,10 +74,7 @@ class TestInsertDynamicData(unittest.TestCase):
     
     ## ------------------------------ Successes ------------------------------ ##
     def test_success(self):
-        pass
-        testContext = deepcopy(contextDict)
-
-        self.assertTrue(InsertDynamicData(testTemplatePath, testContext, pdfName, True))
+        self.assertTrue(InsertDynamicData(testTemplatePath, contextDict, pdfName, True))
 
 if __name__ == '__main__':
     unittest.main()
