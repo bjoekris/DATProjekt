@@ -1,0 +1,9 @@
+<div style="text-align: center;">
+    <h3>Login</h3>
+    <form (submit)="onLogin()">
+        <input type="text" name="username" [(ngModel)]="username" placeholder="Username" required>
+        <input type="password" name="password" [(ngModel)]="password" placeholder="Password" required>
+    </form>
+    
+    <p>Don't have an account? <a routerLink="/register">Register here</a></p>
+</div>

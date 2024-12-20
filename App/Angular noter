@@ -2,14 +2,15 @@ commands
 npm install jspdf
 
 
-kør web app
+kør web app/frontend
 ng serve
+
+kør backend
+1. cd/App/AngBackend
+2. node server.js
 
 create en component
 ng generate component "komponentens navn"
-
-
-
 
 Angular command line interface
 npm install -g @angular/cli
