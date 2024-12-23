@@ -3,78 +3,150 @@
 # Used for unit testing
 import unittest
 from copy import deepcopy
-from local import *
-import pathlib as pl
+from local import InsertDynamicData, RemoveTempFiles
+import os
 import json
+import shutil
 
 
 pdfName = 'Invoice'
-testTemplatePath = 'Api/HC Andersen Flyttefirma Template.docx'
+testOrigTemplatePath = 'Api/HC Andersen Flyttefirma Template.docx'
+testTemplatePath = 'uploadedTemplate.docx'
 with open('Api/contextHC.json') as jsonString:
     contextDict: dict = json.load(jsonString)
 
-unrecognizedURL = {
-    "URL" : "",
-    "Size" : 4,
-    "Positioned" : "False"
-}
-
 
 class TestInsertDynamicData(unittest.TestCase):
-    ## ------------------------------- Errors -------------------------------- ##
+    ## ------------------------------- Error Cases -------------------------------- ##
+    
     def test_contextTooSmall(self):
+        print('contextTooSmall')
+        shutil.copyfile(testOrigTemplatePath, testTemplatePath)
+
         testContext = deepcopy(contextDict)
+        expectedErrMsg = 'Name was not found in context. '
 
         testContext.pop('Name')
+        imageCount = len(contextDict['Images'])
 
-        with self.assertRaises(Exception):
-            InsertDynamicData(testTemplatePath, testContext, pdfName, True)
-    
-    def test_URLError(self):
-        testContext = deepcopy(contextDict)
-
-        testContext['Images'].append(unrecognizedURL)
-
-        with self.assertRaises(Exception):
-            InsertDynamicData(testTemplatePath, testContext, pdfName, True)
-    
-    def test_ImageTooWide(self):
-        testContext = deepcopy(contextDict)
+        with self.assertRaises(ValueError) as cm:
+            InsertDynamicData(testTemplatePath, testContext, pdfName)
         
-        testContext['Images'][0]['Width'] = 171
-
-        with self.assertRaises(Exception):
-            InsertDynamicData(testTemplatePath, testContext, pdfName, True)
-    
-    def test_ImageTooTall(self):
-        testContext = deepcopy(contextDict)
+        RemoveTempFiles(testTemplatePath, pdfName)
         
-        testContext['Images'][0]['Height'] = 126
-
-        with self.assertRaises(Exception):
-            InsertDynamicData(testTemplatePath, testContext, pdfName, True)
+        errMsg = cm.exception.args[0]
+        self.assertEqual(errMsg, expectedErrMsg)
+        self.assertTrue(GeneralTests.isImagesRemoved(imageCount))
     
-    def test_isImagesRemoved(self):
-        testContext = deepcopy(contextDict)
-        imageCount = len(testContext['Images'])
-
-        InsertDynamicData(testTemplatePath, testContext, pdfName, True)
-
-        for i in range(imageCount):
-            path = pl.Path(f'image{i}.png')
-            self.assertEqual((str(path), path.is_file()), (str(path), False))
-
     def test_contextTooLarge(self):
+        print('contextTooLarge')
+        shutil.copyfile(testOrigTemplatePath, testTemplatePath)
+        
         testContext = deepcopy(contextDict)
+        expectedErrMsg = 'test1 was not found in template. '
 
         testContext['test1'] = 1
+        imageCount = len(contextDict['Images'])
 
-        with self.assertRaises(Exception):
-            InsertDynamicData(testTemplatePath, testContext, pdfName, True)
+        with self.assertRaises(ValueError) as cm:
+            InsertDynamicData(testTemplatePath, testContext, pdfName)
+            
+        RemoveTempFiles(testTemplatePath, pdfName)
+        
+        errMsg = cm.exception.args[0]
+        self.assertEqual(errMsg, expectedErrMsg)
+        self.assertTrue(GeneralTests.isImagesRemoved(imageCount))
     
-    ## ------------------------------ Successes ------------------------------ ##
+    def test_imageTooWide(self):
+        print('imageTooWide')
+        shutil.copyfile(testOrigTemplatePath, testTemplatePath)
+        
+        testContext = deepcopy(contextDict)
+        expectedErrMsg = f'{testContext["Images"][0]["URL"]} Width has exceeded the maximum width og 170.'
+        
+        testContext['Images'][0]['Width'] = 171
+        imageCount = len(contextDict['Images'])
+
+        with self.assertRaises(ValueError) as cm:
+            InsertDynamicData(testTemplatePath, testContext, pdfName)
+            
+        RemoveTempFiles(testTemplatePath, pdfName)
+        
+        errMsg = cm.exception.args[0]
+        self.assertEqual(errMsg, expectedErrMsg)
+        self.assertTrue(GeneralTests.isImagesRemoved(imageCount))
+    
+    def test_imageTooTall(self):
+        print('imageTooTall')
+        shutil.copyfile(testOrigTemplatePath, testTemplatePath)
+        
+        testContext = deepcopy(contextDict)
+        expectedErrMsg = f'{testContext["Images"][0]["URL"]} Height has exceeded the maximum height og 125.'
+        
+        testContext['Images'][0]['Size'] = 0
+        testContext['Images'][0]['Width'] = 0
+        testContext['Images'][0]['Height'] = 126
+        
+        imageCount = len(contextDict['Images'])
+
+        with self.assertRaises(ValueError) as cm:
+            InsertDynamicData(testTemplatePath, testContext, pdfName)
+            
+        RemoveTempFiles(testTemplatePath, pdfName)
+        
+        errMsg = cm.exception.args[0]
+        self.assertEqual(errMsg, expectedErrMsg)
+        self.assertTrue(GeneralTests.isImagesRemoved(imageCount))
+    
+    def test_imageSizesAllZero(self):
+        print('imageSizesAllZero')
+        shutil.copyfile(testOrigTemplatePath, testTemplatePath)
+        
+        testContext = deepcopy(contextDict)
+        expectedErrMsg = f'{testContext["Images"][0]["URL"]} Size, Width, and Height were 0, at least one must be larger than 0.'
+
+        testContext['Images'][0]['Size'] = 0
+        testContext['Images'][0]['Width'] = 0
+        testContext['Images'][0]['Height'] = 0
+        
+        imageCount = len(contextDict['Images'])
+
+        with self.assertRaises(ValueError) as cm:
+            InsertDynamicData(testTemplatePath, testContext, pdfName)
+            
+        RemoveTempFiles(testTemplatePath, pdfName)
+        
+        errMsg = cm.exception.args[0]
+        self.assertEqual(errMsg, expectedErrMsg)
+        self.assertTrue(GeneralTests.isImagesRemoved(imageCount))
+
+    ## ------------------------------ Success Cases ------------------------------- ##
+    
     def test_success(self):
-        self.assertTrue(InsertDynamicData(testTemplatePath, contextDict, pdfName, True))
+        print('success')
+        shutil.copyfile(testOrigTemplatePath, testTemplatePath)
+        
+        imageCount = len(contextDict['Images'])
+
+        self.assertTrue(InsertDynamicData(testTemplatePath, contextDict, pdfName))
+        self.assertTrue(GeneralTests.isImagesRemoved(imageCount))
+        self.assertTrue(GeneralTests.isTempDocxRemoved())
+
+class GeneralTests:
+    def isImagesRemoved(imageCount: int):
+        print('isImageRemoved')
+        
+        for i in range(imageCount):
+            if os.path.isfile(f'image{i}.png') == True:
+                return False
+
+        return True
+    
+    def isTempDocxRemoved():
+        print('isTempDocxRemoved')
+
+        return not os.path.isfile(f'{pdfName}.docx')
+            
 
 if __name__ == '__main__':
     unittest.main()
