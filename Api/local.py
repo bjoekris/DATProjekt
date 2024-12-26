@@ -151,50 +151,53 @@ def HandleImages(context: dict, tpl: DocxTemplate):
         foundImage = FindImage(image['URL'], f'image{index}')
         templateImage = InlineImage(tpl, foundImage)
 
-        widthError = ValueError(f'{image["URL"]} Width has exceeded the maximum width og 170.')
-        heightError = ValueError(f'{image["URL"]} Height has exceeded the maximum height og 125.')
-        sizeError = ValueError(f'{image["URL"]} Size, Width, and Height were 0, at least one must be larger than 0.')
+        maxWidth = 170
+        maxHeight = 125
 
         img = Image.open(foundImage)
+        imageRatio = img.width / img.height
 
         # Her bestemes der om hvilken af størrelses-værdierne der skal bruges fra det givne billede
         # Det er også her der bliver checked om størrelses-værdierne er sat for højt
         if image['Size'] > image['Width'] and image['Size'] > image['Height'] and image['Size'] > 0:
-            if img.width > img.height:
-                templateImage = InlineImage(tpl, foundImage, width = Mm(image['Size']))
-
-                if int(templateImage.width) > int(Mm(170)):
-                    img.close()
-                    raise widthError
-
-            elif image['Size'] > 0:
-                templateImage = InlineImage(tpl, foundImage, height = Mm(image['Size']))
-
-                if int(templateImage.height) > int(Mm(125)):
-                    img.close()
-                    raise heightError
+            if img.width > img.height: useWidth = True
+            else: useWidth = False
+            size = image['Size']
+        
+        elif image['Width'] > 0 or image['Height'] > 0:
+            if image['Width'] > image['Height']: useWidth = True
+            else: useWidth = False
             
-            else:
-                raise sizeError
-
+            if useWidth == True: size = image['Width']
+            else: size = image['Height']
+        
         else:
-            if image['Width'] > image['Height'] and image['Width'] > 0:
-                templateImage = InlineImage(tpl, foundImage, width = Mm(image['Width']))
+            img.close()
+            raise ValueError(f'{image["URL"]} caused an error, at position: {index + 1}. At least one between "Size", "Width", and "Height" must be larger than 0.')
 
-                if int(templateImage.width) > int(Mm(170)):
-                    img.close()
-                    raise widthError
+        if useWidth == True:
+            templateImage = InlineImage(tpl, foundImage, width = Mm(size))
+            newHeight = size / imageRatio
 
-            elif image['Height'] > 0:
-                templateImage = InlineImage(tpl, foundImage, height = Mm(image['Height']))
-
-                if int(templateImage.height) > int(Mm(125)):
-                    img.close()
-                    raise heightError
-            
-            else:
+            if templateImage.width > Mm(maxWidth):
                 img.close()
-                raise sizeError
+                raise ValueError(f'{image["URL"]} with Width: {size}, at position: {index + 1} has exceeded the maximum width og 170.')
+            
+            elif newHeight > maxHeight:
+                img.close()
+                raise ValueError(f'{image["URL"]} with Height: {newHeight}, at position: {index + 1} has exceeded the maximum height og 125.')
+        
+        else:
+            templateImage = InlineImage(tpl, foundImage, height = Mm(size))
+            newWidth = imageRatio * size
+
+            if templateImage.height > Mm(maxHeight):
+                img.close()
+                raise ValueError(f'{image["URL"]} with Height: {size}, at position: {index + 1} has exceeded the maximum height og 125.')
+
+            if newWidth > maxWidth:
+                img.close()
+                raise ValueError(f'{image["URL"]} with Width: {newWidth}, at position: {index + 1} has exceeded the maximum width og 170.')
 
         img.close()
 

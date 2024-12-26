@@ -46,7 +46,7 @@
         {
             "URL" : "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fsoftauthor.com%2Fwp-content%2Fuploads%2F2021%2F08%2FCSS-Background-Image-Full-Screent-With-background-Image-1536x1355.png&f=1&nofb=1&ipt=735b1a81221f3a52f64f975dbba2b30e6f37a6cd8896b74c582fb0b57ec05eaa&ipo=images",
             "Size" : 0,
-            "Width" : 150,
+            "Width" : 140,
             "Height" : 0,
             "Positioned" : "True",
             "List" : 0
@@ -69,6 +69,14 @@
         },
         {
             "URL" : "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Funiversemagazine.com%2Fwp-content%2Fuploads%2F2022%2F08%2Fzm4nfgq29yi91-1536x1536-1.jpg&f=1&nofb=1&ipt=3442c84f5326c536eb005071ed537fdbdb6fbb81e0926a9e1567a2e81cf54f9c&ipo=images",
+            "Size" : 0,
+            "Width" : 0,
+            "Height" : 125,
+            "Positioned" : "False",
+            "List" : 1
+        },
+        {
+            "URL" : "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fimages.pexels.com%2Fphotos%2F1666021%2Fpexels-photo-1666021.jpeg%3Fcs%3Dsrgb%26dl%3Dconifers-daylight-environment-1666021.jpg%26fm%3Djpg&f=1&nofb=1&ipt=8cb60a6ea217d06e6db5aa42b9dd8e75aed172df549f2217f83888edfa3a708a&ipo=images",
             "Size" : 0,
             "Width" : 0,
             "Height" : 125,
