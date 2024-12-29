@@ -85,8 +85,9 @@ async def insert_dynamic_data(
     try:
         return InsertDynamicData(templatePath, context, pdfName)
     except Exception as e:
-        logging.info(f'InsertDynamicData returned {e}')
-        return e
+        logging.info(f'InsertDynamicData returned: {e}')
+        RemoveTempFiles(templatePath, pdfName)
+        raise HTTPException(status_code = 500, detail = f'{e}')
 ## --------------------------------------------------------------------------------------------------- ##
 
 ## ----------------------------------------- Skrevet af Bjørn ---------------------------------------- ##
