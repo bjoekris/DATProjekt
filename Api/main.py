@@ -4,6 +4,8 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 import logging
 from dotenv import load_dotenv
+import mysql.connector
+
 import os
 
 # Brugt til i konversionen af nødvændig data, ved konvertering fra .json til given datatype
@@ -11,7 +13,6 @@ import json
 import shutil
 from local import *
 
-import mysql.connector
 
 
 ## ------------------------------------------ Skrevet af Bjørn --------------------------------------- ##
