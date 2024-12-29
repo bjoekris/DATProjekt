@@ -25,17 +25,6 @@ mydb = mysql.connector.connect(
     database=os.environ.get("DB_DATABASE")
 )
 
-
-##mydb = mysql.connector.connect(
-  #  host="mysql93.unoeuro.com",
-   # user="bbksolutions_dk",
-    #password="cmfbeAtrkR5zBaF426x3",
-    #database="bbksolutions_dk_db"
-#)
-
-
-
-
 app = FastAPI()
 
 app.add_middleware(
