@@ -1,18 +1,2 @@
-<div style="text-align: center;">
-  <h1>Velkommen til {{ title }}</h1>
-  <div>
-    <h3>Login</h3>
-    <input [(ngModel)]="username" placeholder="Username" />
-    <input [(ngModel)]="password" placeholder="Password" type="password" />
-    <button (click)="login()">Login</button>
-  </div>
 
-  <!-- <div>
-    <h3>Register</h3>
-    <input [(ngModel)]="username" placeholder="Username" />
-    <input [(ngModel)]="password" placeholder="Password" type="password" />
-    <button (click)="register()">Register</button>
-  </div> -->
-
-  <p>{{ message }}</p>
-</div>
+<router-outlet></router-outlet>
