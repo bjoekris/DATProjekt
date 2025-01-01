@@ -14,20 +14,20 @@ export class AuthService {
     //   }
       
 
-    login(username: string, password: string): Observable<any> {
-        return this.http.post(`${this.baseUrl}/login`, { username, password });
+    login(email: string, password: string): Observable<any> {
+        return this.http.post(`${this.baseUrl}/login`, { email, password });
     }
 
-    register(username: string, password: string): Observable<any> {
-        return this.http.post(`${this.baseUrl}/register`, { username, password });
+    register(email: string, password: string): Observable<any> {
+        return this.http.post(`${this.baseUrl}/register`, { email, password });
     }
 }
 
 
-// registerUser(user: { username: string; password: string }): Observable<any> {
+// registerUser(user: { email: string; password: string }): Observable<any> {
 //     return this.http.post(`${this.baseUrl}/register`, user);
 // }
 
-// loginUser(user: { username: string; password: string }): Observable<any> {
+// loginUser(user: { email: string; password: string }): Observable<any> {
 //     return this.http.post(`${this.baseUrl}/login`, user);
 // }

@@ -1,7 +1,6 @@
 commands
 npm install jspdf
 
-
 kør web app/frontend
 ng serve
 

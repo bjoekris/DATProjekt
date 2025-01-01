@@ -12,13 +12,13 @@
 //   styleUrls: ['./login.component.css'],
 // })
 // export class LoginComponent {
-//   username: string = '';
+//   email: string = '';
 //   password: string = '';
 
 //   constructor(private authService: AuthService, private router: Router) {}
 
 //   onLogin() {
-//     this.authService.login(this.username, this.password).subscribe(
+//     this.authService.login(this.email, this.password).subscribe(
 //       (response) => {
 //         console.log('Login succesful', response);
 
@@ -47,13 +47,13 @@ import { RouterModule } from '@angular/router';
   styleUrls: ['./login.component.css'],
 })
 export class LoginComponent {
-  username: string = '';
+  email: string = '';
   password: string = '';
 
   constructor(private authService: AuthService, private router: Router) {}
 
   onLogin() {
-    this.authService.login(this.username, this.password).subscribe(
+    this.authService.login(this.email, this.password).subscribe(
       (response) => {
         console.log('Login successful', response);
         this.router.navigate(['/invoice']); // Navigate to /invoice after successful login
