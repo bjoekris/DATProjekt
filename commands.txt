@@ -18,3 +18,8 @@
 
 For filesaving in angular app.
 npm install file-saver
+
+
+
+
+npm install mammoth (docs file reader til angular)

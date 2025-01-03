@@ -9,7 +9,7 @@ import mammoth from 'mammoth';
 
 interface DynamicField {
   name: string;
-  type: 'text' | 'number' | 'file' | 'media';
+  type: 'text' | 'number' | 'file' | 'media' | 'repeat';
 }
 
 @Component({
@@ -53,7 +53,10 @@ export class AppComponent {
           type = 'file';
         } else if (variable.endsWith('media')) {
           type = 'media';
+        } else if (variable.endsWith('_repeat')) {
+          type = 'repeat';
         }
+       //Repeat function til at gentage felter
 
         const name = variable.replace(/(?:text|number|file|media)$/, '');
         this.dynamicFields.push({ name, type });
@@ -72,7 +75,7 @@ export class AppComponent {
       return;
     }
 
-    const apiKey = 'abc123456879';
+    const apiKey = 'abc123456789';
     this.templateService.sendDynamicData(this.templateFile, this.formData, apiKey)
       .subscribe(response => {
         saveAs(response, 'generated.pdf');
