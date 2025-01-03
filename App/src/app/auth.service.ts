@@ -1,4 +1,25 @@
-import { Injectable } from '@angular/core';
+// import { Injectable } from '@angular/core';
+// import { HttpClient } from '@angular/common/http';
+// import { Observable } from 'rxjs';
+
+// @Injectable({
+//     providedIn: 'root',
+// })
+// export class AuthService {
+//     private baseUrl = 'http://localhost:3000';
+
+//     constructor(private http: HttpClient) {}
+
+//     login(email: string, password: string): Observable<any> {
+//         return this.http.post(`${this.baseUrl}/login`, { email, password });
+//     }
+
+//     register(email: string, password: string): Observable<any> {
+//         return this.http.post(`${this.baseUrl}/register`, { email, password });
+//     }
+// }
+
+import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
@@ -7,12 +28,9 @@ import { Observable } from 'rxjs';
 })
 export class AuthService {
     private baseUrl = 'http://localhost:3000';
+    private tokenKey = 'token';
 
     constructor(private http: HttpClient) {}
-    // constructor(private http: HttpClient) {
-    //     console.log('HttpClient injected:', this.http);
-    //   }
-      
 
     login(email: string, password: string): Observable<any> {
         return this.http.post(`${this.baseUrl}/login`, { email, password });
@@ -21,13 +39,22 @@ export class AuthService {
     register(email: string, password: string): Observable<any> {
         return this.http.post(`${this.baseUrl}/register`, { email, password });
     }
+
+    isLoggedIn(): boolean {
+        if (typeof window !== 'undefined' && localStorage) {
+            return !!localStorage.getItem(this.tokenKey);
+        }
+        return false;
+    }
+
+    saveToken(token: string): void {
+        localStorage.setItem(this.tokenKey, token);
+    }
+
+    logout(): void {
+        localStorage.removeItem(this.tokenKey);
+        console.log('Logged out');
+    }
+
+
 }
-
-
-// registerUser(user: { email: string; password: string }): Observable<any> {
-//     return this.http.post(`${this.baseUrl}/register`, user);
-// }
-
-// loginUser(user: { email: string; password: string }): Observable<any> {
-//     return this.http.post(`${this.baseUrl}/login`, user);
-// }

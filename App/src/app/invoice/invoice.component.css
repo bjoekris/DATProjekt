@@ -1,0 +1,78 @@
+.invoice {
+    text-align: center;
+}
+
+.invoice form {
+    display: inline-block;
+    width: 100%;
+    max-width: 400px; /* Same width as login form */
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.invoice .form-group {
+    margin-bottom: 15px;
+}
+
+.invoice .form-group label {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.invoice .form-group input {
+    width: calc(100% - 20px); /* Ensures input takes full width minus padding */
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+}
+
+.invoice .error {
+    color: red;
+    font-size: 0.9em;
+    margin-top: 5px;
+}
+
+.invoice .item-group {
+    margin-bottom: 20px;
+}
+
+.invoice .item-group button {
+    margin-top: 10px;
+}
+
+.invoice .remove-btn,
+.invoice .add-btn {
+    padding: 5px 15px;
+    margin-top: 10px;
+    border: none;
+    background-color: #ff6b6b;
+    color: white;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 0.9em;
+}
+
+.invoice .remove-btn:hover,
+.invoice .add-btn:hover {
+    background-color: #ff4c4c;
+}
+
+.invoice .submit-btn {
+    width: 100%;
+    padding: 10px;
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 1.1em;
+}
+
+.invoice .submit-btn:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}

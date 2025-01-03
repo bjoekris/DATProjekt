@@ -1,0 +1,25 @@
+/* Register page specific styles */
+.register-container {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.register-container form {
+    display: inline-block;
+    width: 100%;
+    max-width: 400px;
+}
+
+.register-container input {
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+.register-container button {
+    width: 40%;
+}
+
+.register-container p {
+    margin-top: 15px;
+    font-size: 0.9em;
+}

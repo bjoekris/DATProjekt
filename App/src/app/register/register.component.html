@@ -1,52 +1,49 @@
-<div style="text-align: center;">
+<div class="register-container">
+    <div class="form-container">
+        <h3>Register</h3>
+        <form (ngSubmit)="onRegister()" #registerForm="ngForm">
+            <input 
+                type="email" 
+                name="email" 
+                [(ngModel)]="email" 
+                placeholder="Email" 
+                required
+                email
+                #emailField="ngModel" />
+            <div *ngIf="emailField.invalid && emailField.touched" class="error">
+                Please enter a valid email address
+            </div>
 
-    <h3>Register</h3>
+            <input 
+                type="password" 
+                name="password" 
+                [(ngModel)]="password" 
+                placeholder="Password" 
+                required
+                minlength="6"
+                #passwordField="ngModel" />
+            <div *ngIf="passwordField.invalid && passwordField.touched" class="error">
+                Password must be at least 6 characters long
+            </div>
 
-    <form (ngSubmit)="onRegister()" #registerForm="ngForm">
-        <input type="email" 
-        name="email" 
-        [(ngModel)]="email" 
-        placeholder="Email" 
-        required
-        email
-        #emailField="ngModel" />
+            <input 
+                type="password" 
+                name="confirmPassword" 
+                [(ngModel)]="confirmPassword" 
+                placeholder="Confirm Password" 
+                required
+                #confirmPasswordField="ngModel" />
+            <div *ngIf="confirmPassword !== password && confirmPasswordField.touched" class="error">
+                Passwords do not match
+            </div>
 
-        <div *ngIf="emailField.invalid && emailField.touched" style="color: red;">
-            Please enter a valid email adress
-        </div>
+            <div *ngIf="errorMessage" class="error">
+                {{ errorMessage }}
+            </div>
 
-        <input type="password" 
-        name="password" 
-        [(ngModel)]="password" 
-        placeholder="Password" 
-        required
-        minlength="6"
-        #passwordField="ngModel" />
+            <button type="submit" [disabled]="registerForm.invalid">Register</button>
+        </form>
 
-        <div *ngIf="passwordField.invalid && passwordField.touched" style="color: red;">
-            Password must be at least 6 characters long
-        </div>
-
-
-        <input type="password" 
-        name="confirmPassword" 
-        [(ngModel)]="confirmPassword" 
-        placeholder="Confirm Password" 
-        required
-        #confirmPasswordField="ngModel" />
-
-        <div *ngIf="confirmPassword !== password && confirmPasswordField.touched" style="color: red;">
-            Passwords do not match
-        </div>
-
-        <div *ngIf="errorMessage" style="color: red; margin-top: 10px;">
-            {{errorMessage}}
-        </div>
-
-        <button type="submit" [disabled]="registerForm.invalid">Register</button>
-    </form>
-
-    <p>Already have an account? <a routerLink="/login">Login here</a></p>
+        <p>Already have an account? <a routerLink="/login">Login here</a></p>
+    </div>
 </div>
-
-
