@@ -9,7 +9,7 @@ import mammoth from 'mammoth';
 
 interface DynamicField {
   name: string;
-  type: 'text' | 'number' | 'file' | 'media' | 'repeat';
+  type: 'text' | 'number' | 'file' | 'media' | 'list' | 'image';
 }
 
 @Component({
@@ -24,6 +24,7 @@ export class AppComponent {
   templateFile: File | null = null;
   formData: any = {};
   dynamicFields: DynamicField[] = [];
+  listFields: { name: string, type: DynamicField['type'] }[] = [];
   title = 'App';
 
   constructor(private templateService: TemplateService, private http: HttpClient) {}
@@ -38,12 +39,35 @@ export class AppComponent {
       const result = await mammoth.extractRawText({ arrayBuffer });
       const text = result.value;
 
+      const forBlocks: { start: number, end: number, variable: string, type: DynamicField['type'] }[] = [];
+      const forRegex = /{% for (\w+) in (\w+) %}/g;
+      let match;
+      while ((match = forRegex.exec(text)) !== null) {
+        const start = match.index;
+        const endforRegex = /{% endfor %}/g;
+        endforRegex.lastIndex = forRegex.lastIndex;
+        const endMatch = endforRegex.exec(text);
+        if (endMatch) {
+          const end = endMatch.index + endMatch[0].length;
+          let type: DynamicField['type'] = 'list';
+          if (match[2].toLowerCase().includes('image')) {
+            type = 'image';
+          } else {
+            type = 'list';
+          }
+          forBlocks.push({ start, end, variable: match[2], type });
+        }
+      }
+
       const regex = /{{([^}]+)}}/g;
       const matches = text.matchAll(regex);
 
       this.dynamicFields = [];
+      this.listFields = [];
+
       for (const match of matches) {
         const variable = match[1].trim();
+
         let type: DynamicField['type'] = 'text';
         if (variable.endsWith('_text')) {
           type = 'text';
@@ -53,16 +77,27 @@ export class AppComponent {
           type = 'file';
         } else if (variable.endsWith('media')) {
           type = 'media';
-        } else if (variable.endsWith('_repeat')) {
-          type = 'repeat';
         }
-       //Repeat function til at gentage felter
 
         const name = variable.replace(/(?:text|number|file|media)$/, '');
-        this.dynamicFields.push({ name, type });
+
+        let isList = false;
+        for (const block of forBlocks) {
+          if (match.index >= block.start && match.index < block.end) {
+            this.listFields.push({ name: block.variable, type: block.type });
+            isList = true;
+            break;
+          }
+        }
+
+        if (!isList) {
+          this.dynamicFields.push({ name, type });
+        }
       }
 
       console.log("DynamicFields:", this.dynamicFields);
+      console.log("ListFields:", this.listFields);
+
     } catch (error) {
       console.error("Error processing DOCX file:", error);
     }
@@ -82,5 +117,22 @@ export class AppComponent {
       }, error => {
         console.error('Error generating PDF:', error);
       });
+  }
+
+  trackByIndex(index: number, item: any): any {
+    return index;
+  }
+
+  addListItem(listFieldName: string): void {
+    if (!this.formData[listFieldName]) {
+      this.formData[listFieldName] = [];
+    }
+    this.formData[listFieldName].push('');
+  }
+
+  removeListItem(listFieldName: string, index: number): void {
+    if (this.formData[listFieldName]) {
+      this.formData[listFieldName].splice(index, 1);
+    }
   }
 }

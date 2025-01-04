@@ -11,15 +11,7 @@
 # {{company_name}}, {{date}}, {{hours_of_work}}, and {{hour_price}}, {{proof_of_work}}
 
 
-# pip install 'fastapi[standard]'
-# pip install docxtpl
-# pip install docx2pdf
-# pip install python-docx
-
 For filesaving in angular app.
 npm install file-saver
-
-
-
-
 npm install mammoth (docs file reader til angular)
+npm install tslib

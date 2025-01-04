@@ -11,6 +11,21 @@
       <input type="text" [id]="field.name" [(ngModel)]="formData[field.name]" [name]="field.name" required />
     </div>
 
+    <div *ngFor="let list of listFields">
+      <label>{{ list.name }}</label>
+      <div *ngFor="let item of formData[list.name]; let i = index; trackBy: trackByIndex">
+        <ng-container *ngIf="list.type === 'image'; else defaultList">
+          <input type="text" [(ngModel)]="formData[list.name][i].url" name="{{ list.name }}_{{ i }}_url" placeholder="Image URL" />
+          <input type="text" [(ngModel)]="formData[list.name][i].caption" name="{{ list.name }}_{{ i }}_caption" placeholder="Image Caption" />
+        </ng-container>
+        <ng-template #defaultList>
+          <input [type]="list.type" [(ngModel)]="formData[list.name][i]" name="{{ list.name }}_{{ i }}" />
+        </ng-template>
+        <button type="button" (click)="removeListItem(list.name, i)">Remove</button>
+      </div>
+      <button type="button" (click)="addListItem(list.name)">Add Item</button>
+    </div>
+
     <button type="submit" [disabled]="!templateForm.form.valid">Generate PDF</button>
   </form>
 </div>
