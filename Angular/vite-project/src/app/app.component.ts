@@ -9,7 +9,7 @@ import mammoth from 'mammoth';
 
 interface DynamicField {
   name: string;
-  type: 'text' | 'number' | 'file' | 'media' | 'list' | 'image';
+  type: 'text' | 'number' | 'file' | 'media' | 'list' | 'image' | 'table';
 }
 
 @Component({
@@ -25,6 +25,7 @@ export class AppComponent {
   formData: any = {};
   dynamicFields: DynamicField[] = [];
   listFields: { name: string, type: DynamicField['type'] }[] = [];
+  tableFields: { name: string, variables: Map<string, string[]>, type: DynamicField['type'] }[] = [];
   title = 'App';
 
   constructor(private templateService: TemplateService, private http: HttpClient) {}
@@ -34,40 +35,69 @@ export class AppComponent {
     console.log("OnFileChange function called");
     const file = event.target.files[0];
 
+    const listFields: string[] = [];
+    const tableFields: string[] = [];
+
     try {
       const arrayBuffer = await file.arrayBuffer();
       const result = await mammoth.extractRawText({ arrayBuffer });
       const text = result.value;
-
-      const forBlocks: { start: number, end: number, variable: string, type: DynamicField['type'] }[] = [];
+    
       const forRegex = /{% for (\w+) in (\w+) %}/g;
       let match;
       while ((match = forRegex.exec(text)) !== null) {
-        const start = match.index;
         const endforRegex = /{% endfor %}/g;
         endforRegex.lastIndex = forRegex.lastIndex;
         const endMatch = endforRegex.exec(text);
         if (endMatch) {
-          const end = endMatch.index + endMatch[0].length;
           let type: DynamicField['type'] = 'list';
           if (match[2].toLowerCase().includes('image')) {
             type = 'image';
           } else {
             type = 'list';
           }
-          forBlocks.push({ start, end, variable: match[2], type });
+          this.listFields.push({ name: match[2], type });
+          listFields.push(match[1]);
         }
       }
+    
+      const tableVariables = new Map<string, string[]>();
+      const tableRegex = /{%[tc]r for (\w+) in (\w+) %}/g;
+      const objectReference = '';
+      const variables = [];
+      while ((match = tableRegex.exec(text)) !== null) {
+        const objectReference = match[1];
+        const tableStart = match.index;
+        const tableEndRegex = /{% endfor %}/g;
+        tableEndRegex.lastIndex = tableRegex.lastIndex;
+        const tableEndMatch = tableEndRegex.exec(text);
+        if (tableEndMatch) {
+          const tableEnd = tableEndMatch.index + tableEndMatch[0].length;
+          const variableRegex = new RegExp(`{{${objectReference}\\.([^}]+)}}`, 'g');
+          let variableMatch;
+          while ((variableMatch = variableRegex.exec(text.substring(tableStart, tableEnd))) !== null) {
+            const variableName = `${objectReference}.${variableMatch[1]}`;
+            variables.push(variableName);
+            tableFields.push(variableName);
+          }
+        }
+      }
+      tableVariables.set(objectReference, variables);
+      this.tableFields.push({ name: objectReference, variables: tableVariables, type: 'table' });
 
+      if (!this.formData[objectReference]) {
+        this.formData[objectReference] = [{}];
+        variables.forEach(variable => {
+          this.formData[objectReference][0][variable] = '';
+        });
+      }
+    
       const regex = /{{([^}]+)}}/g;
       const matches = text.matchAll(regex);
-
-      this.dynamicFields = [];
-      this.listFields = [];
-
+    
       for (const match of matches) {
         const variable = match[1].trim();
-
+        
         let type: DynamicField['type'] = 'text';
         if (variable.endsWith('_text')) {
           type = 'text';
@@ -78,26 +108,20 @@ export class AppComponent {
         } else if (variable.endsWith('media')) {
           type = 'media';
         }
-
+    
         const name = variable.replace(/(?:text|number|file|media)$/, '');
-
-        let isList = false;
-        for (const block of forBlocks) {
-          if (match.index >= block.start && match.index < block.end) {
-            this.listFields.push({ name: block.variable, type: block.type });
-            isList = true;
-            break;
-          }
+        
+        if (listFields.includes(variable) || tableFields.includes(variable) || variable.toLowerCase().includes('image')) {
+          continue;
         }
-
-        if (!isList) {
-          this.dynamicFields.push({ name, type });
-        }
+  
+        this.dynamicFields.push({ name, type });
       }
-
+    
       console.log("DynamicFields:", this.dynamicFields);
       console.log("ListFields:", this.listFields);
-
+      console.log("TableFields:", this.tableFields);
+    
     } catch (error) {
       console.error("Error processing DOCX file:", error);
     }
@@ -127,12 +151,33 @@ export class AppComponent {
     if (!this.formData[listFieldName]) {
       this.formData[listFieldName] = [];
     }
-    this.formData[listFieldName].push('');
+    if (listFieldName === 'InlineImages') {
+      this.formData[listFieldName].push({ url: '', caption: '', option: 'auto' });
+    } else {
+      this.formData[listFieldName].push('');
+    }
   }
 
   removeListItem(listFieldName: string, index: number): void {
     if (this.formData[listFieldName]) {
       this.formData[listFieldName].splice(index, 1);
+    }
+  }
+
+  addTableRow(tableName: string, columns: string[]): void {
+    if (!this.formData[tableName]) {
+      this.formData[tableName] = [];
+    }
+    const newRow: any = {};
+    columns.forEach(column => {
+      newRow[column] = '';
+    });
+    this.formData[tableName].push(newRow);
+  }
+
+  removeTableRow(tableName: string, index: number): void {
+    if (this.formData[tableName]) {
+      this.formData[tableName].splice(index, 1);
     }
   }
 }
