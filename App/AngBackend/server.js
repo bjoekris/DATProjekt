@@ -38,9 +38,6 @@ app.get('/', (req, res) => {
   res.send('Backend server running');
 });
 
-let users = [];
-app.use(bodyParser.json());
-
 //register
 app.post('/register', async (req, res) => {
     const { email, password } = req.body;
