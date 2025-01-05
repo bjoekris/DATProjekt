@@ -32,7 +32,7 @@ def InsertDynamicData(
                 raise HTTPException(status_code = 400, details = f'{image["URL"]} has size {image["Size"]}. It cannot exceed 8.')
             
             foundImage = FindImage(image['URL'], f'image{index}')
-            if image['Positioned'] == 'True':
+            if image['List'] == 0:
                 context[f'Image{index}'] = InlineImage(tpl, foundImage, width = Inches(image['Size']))
             
             else:

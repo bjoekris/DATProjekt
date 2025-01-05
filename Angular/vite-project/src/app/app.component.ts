@@ -43,12 +43,13 @@ export class AppComponent {
       const result = await mammoth.extractRawText({ arrayBuffer });
       const text = result.value;
     
-      const forRegex = /{% for (\w+) in (\w+) %}/g;
+      // Used to identify lists and their variables
+      const listForRegex = /{% for (\w+) in (\w+) %}/g;
       let match;
-      while ((match = forRegex.exec(text)) !== null) {
-        const endforRegex = /{% endfor %}/g;
-        endforRegex.lastIndex = forRegex.lastIndex;
-        const endMatch = endforRegex.exec(text);
+      while ((match = listForRegex.exec(text)) !== null) {
+        const listEndforRegex = /{% endfor %}/g;
+        listEndforRegex.lastIndex = listForRegex.lastIndex;
+        const endMatch = listEndforRegex.exec(text);
         if (endMatch) {
           let type: DynamicField['type'] = 'list';
           if (match[2].toLowerCase().includes('image')) {
@@ -61,16 +62,17 @@ export class AppComponent {
         }
       }
     
+      // Used to identify tables and their variables
       const tableVariables = new Map<string, string[]>();
-      const tableRegex = /{%[tc]r for (\w+) in (\w+) %}/g;
+      const tableForRegex = /{%[tc]r for (\w+) in (\w+) %}/g;
       const objectReference = '';
       const variables = [];
-      while ((match = tableRegex.exec(text)) !== null) {
+      while ((match = tableForRegex.exec(text)) !== null) {
         const objectReference = match[1];
         const tableStart = match.index;
-        const tableEndRegex = /{% endfor %}/g;
-        tableEndRegex.lastIndex = tableRegex.lastIndex;
-        const tableEndMatch = tableEndRegex.exec(text);
+        const tableEndforRegex = /{% endfor %}/g;
+        tableEndforRegex.lastIndex = tableForRegex.lastIndex;
+        const tableEndMatch = tableEndforRegex.exec(text);
         if (tableEndMatch) {
           const tableEnd = tableEndMatch.index + tableEndMatch[0].length;
           const variableRegex = new RegExp(`{{${objectReference}\\.([^}]+)}}`, 'g');
@@ -85,6 +87,7 @@ export class AppComponent {
       tableVariables.set(objectReference, variables);
       this.tableFields.push({ name: objectReference, variables: tableVariables, type: 'table' });
 
+      // Used in the table display
       if (!this.formData[objectReference]) {
         this.formData[objectReference] = [{}];
         variables.forEach(variable => {
@@ -151,7 +154,7 @@ export class AppComponent {
     if (!this.formData[listFieldName]) {
       this.formData[listFieldName] = [];
     }
-    if (listFieldName === 'InlineImages') {
+    if (listFieldName.includes('image')) {
       this.formData[listFieldName].push({ url: '', caption: '', option: 'auto' });
     } else {
       this.formData[listFieldName].push('');
