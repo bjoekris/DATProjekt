@@ -1,16 +1,41 @@
-<div class="container">
-  <h1>Generate PDF from Template</h1>
-  <form (ngSubmit)="onSubmit()" #templateForm="ngForm">
-    <div class="form-group">
-      <label for="templateFile">Upload Template File</label>
-      <input type="file" id="templateFile" (change)="onFileChange($event)" required />
-    </div>
+<!--Bjørn-->
 
+<div class="container">
+  <h1>InvoiEZ Word skabelon til PDF converter</h1>
+  <h2>Sådan anvender du InvoiEZ</h2>
+  <ul class="guide-list">
+    <li ngNonBindable>
+      Opret dit worddokument og skriv f.eks. {{Fornavn}} eller {{Adresse}} for at angive et dynamisk felt.
+    </li>
+    <li ngNonBindable>
+      Upload word dokumentet og udfyld de dynamiske felter med den data du vil bruge.
+    </li>
+    <li ngNonBindable>
+      Når alle felter er udfyldt kan du trykke på "Generer PDF" knappen og modtage dine færdige pdf.
+    </li>
+  </ul>
+
+  <form (ngSubmit)="onSubmit()" #templateForm="ngForm">
+    
+    <div class="loader-container" *ngIf="loading">
+      <div class="loader"></div>
+    </div>
+    <div class="upload-box">
+      <img class="text-files-svg" src="text-files.svg" alt="">
+      <input type="file" id="templateFile" (change)="onFileChange($event)" required #fileInput />
+      <button type="button" (click)="fileInput.click()">
+        <img src="upload.svg" alt="">Upload template
+      </button>
+    <p class="file-name" *ngIf="templateFile">{{templateFile.name}}</p>
+    </div>
+    <br>
     <div *ngFor="let field of dynamicFields" class="form-group">
       <label [for]="field.name">{{ field.name }}</label>
       <input type="text" [id]="field.name" [(ngModel)]="formData[field.name]" [name]="field.name" required />
     </div>
 
-    <button type="submit" [disabled]="!templateForm.form.valid">Generate PDF</button>
+    <button type="submit" [disabled]="!templateForm.form.valid || !templateFile"
+      [attr.title]="(!templateForm.form.valid || !templateFile) ? 'Upload skabelon og indtast data' : null">Generer
+      PDF</button>
   </form>
 </div>
