@@ -8,7 +8,8 @@
                 [(ngModel)]="email" 
                 placeholder="Email" 
                 required
-                #emailField="ngModel" />
+                #emailField="ngModel"
+                email />
             <div *ngIf="emailField.invalid && emailField.touched" class="error">
                 Please enter a valid email address
             </div>
