@@ -11,7 +11,6 @@ export class TemplateService {
   private apiUrl = 'http://127.0.0.1:8000/insert-dynamic-data/';
 
   constructor(private http: HttpClient) {
-    
   }
   
     sendDynamicData(templateFile: File, formData: any, apiKey: string): Observable<Blob> {
