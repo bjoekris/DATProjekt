@@ -21,19 +21,16 @@ export class LoginComponent {
   constructor(private authService: AuthService, private router: Router) {}
 
   onLogin() {
-    this.errorMessage = '';
-
     this.authService.login(this.email, this.password).subscribe(
       (response) => {
         console.log('Login successful', response);
+        this.authService.saveToken(response.token);
         this.router.navigate(['/invoice']);
       },
       (error) => {
         console.error('Login failed', error);
-        this.errorMessage = 
-        error.error.message || 'Login failed';
+        this.errorMessage = 'Login failed';
       }
     );
   }
 }
-
