@@ -1,0 +1,8 @@
+{
+  "routes": {
+    "/": {},
+    "/invoice": {},
+    "/login": {},
+    "/register": {}
+  }
+}
