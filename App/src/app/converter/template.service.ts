@@ -2,6 +2,8 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
+//Bjørn
+
 @Injectable({
   providedIn: 'root'
 })
@@ -9,7 +11,6 @@ export class TemplateService {
   private apiUrl = 'http://127.0.0.1:8000/insert-dynamic-data/';
 
   constructor(private http: HttpClient) {
-    
   }
   
     sendDynamicData(templateFile: File, formData: any, apiKey: string): Observable<Blob> {
@@ -18,9 +19,10 @@ export class TemplateService {
       form.append('contextFile', new Blob([JSON.stringify(formData)], { type: 'application/json' }));
   
       const headers = new HttpHeaders({
-        'x-api-key': apiKey
+        'X-API-KEY': apiKey
+        
       });
-  
+      console.log("Sent Headers and ApiKey", headers, apiKey);
       return this.http.post(this.apiUrl, form, { headers, responseType: 'blob' });
       
   }
