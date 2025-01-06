@@ -23,7 +23,7 @@
           <input type="number" [(ngModel)]="formData[list.name][i].size" name="{{ list.name }}_{{ i }}_size" min="0" max="9999" />
           <!-- TO DO: Make auto be selected by default -->
           <div>
-            <input type="radio" [(ngModel)]="formData[list.name][i].option" name="{{ list.name }}_{{ i }}_option" value="auto" /> Auto
+            <input type="radio" [(ngModel)]="formData[list.name][i].option" name="{{ list.name }}_{{ i }}_option" value="size" /> Auto
           </div>
           <div>
             <input type="radio" [(ngModel)]="formData[list.name][i].option" name="{{ list.name }}_{{ i }}_option" value="width" /> Width
