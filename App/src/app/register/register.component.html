@@ -1,12 +1,49 @@
 <div class="register-container">
-    <h2>Register</h2>
-    <form (submit)="onSubmit()">
-        <label for="email">Email</label>
-        <input type="email" id="email" [(ngModel)]="email" name="email" required />
+    <div class="form-container">
+        <h3>Register</h3>
+        <form (ngSubmit)="onRegister()" #registerForm="ngForm">
+            <input 
+                type="email" 
+                name="email" 
+                [(ngModel)]="email" 
+                placeholder="Email" 
+                required
+                email
+                #emailField="ngModel" />
+            <div *ngIf="emailField.invalid && emailField.touched" class="error">
+                Please enter a valid email address
+            </div>
 
-        <label for="password">Password</label>
-        <input type="password" id="password" [(ngModel)]="password" name="email" required />
+            <input 
+                type="password" 
+                name="password" 
+                [(ngModel)]="password" 
+                placeholder="Password" 
+                required
+                minlength="6"
+                #passwordField="ngModel" />
+            <div *ngIf="passwordField.invalid && passwordField.touched" class="error">
+                Password must be at least 6 characters long
+            </div>
 
-        <button type="submit">Register</button>
-    </form>
+            <input 
+                type="password" 
+                name="confirmPassword" 
+                [(ngModel)]="confirmPassword" 
+                placeholder="Confirm Password" 
+                required
+                #confirmPasswordField="ngModel" />
+            <div *ngIf="confirmPassword !== password && confirmPasswordField.touched" class="error">
+                Passwords do not match
+            </div>
+
+            <div *ngIf="errorMessage" class="error">
+                {{ errorMessage }}
+            </div>
+
+            <button type="submit" [disabled]="registerForm.invalid">Register</button>
+        </form>
+
+        <p>Already have an account? <a routerLink="/login">Login here</a></p>
+    </div>
 </div>

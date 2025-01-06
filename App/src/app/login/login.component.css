@@ -1,0 +1,24 @@
+.login-container {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.login-container form {
+    display: inline-block;
+    width: 100%;
+    max-width: 400px;
+}
+
+.login-container input {
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+.login-container button {
+    width: 40%;
+}
+
+.login-container p {
+    margin-top: 15px;
+    font-size: 0.9em;
+}

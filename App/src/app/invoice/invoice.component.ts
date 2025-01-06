@@ -44,12 +44,6 @@ export class InvoiceComponent {
 
 
   generateInvoice(form: any) {
-    // if(!form.valid) {
-    //   alert('Please fill in all the fields');
-    //   return;
-    // }
-
-
     const doc = new jsPDF();
 
     doc.setFont('helvetica', 'bold');
