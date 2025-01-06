@@ -44,7 +44,6 @@ export class AppComponent {
       return;
     }
 
-    
     const file = event.target.files[0];
 
     const listFields: string[] = [];
