@@ -1,8 +1,7 @@
 import { Component } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../auth.service';
 import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 
 
@@ -35,5 +34,4 @@ export class LoginComponent {
       }
     });
   }
-  
 }
