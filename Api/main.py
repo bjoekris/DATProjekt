@@ -6,6 +6,7 @@ import logging
 from dotenv import load_dotenv
 import mysql.connector
 
+
 import os
 
 # Brugt til i konversionen af nødvændig data, ved konvertering fra .json til given datatype

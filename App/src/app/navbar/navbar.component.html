@@ -1,6 +1,7 @@
 <nav class="navbar">
     <div class="navbar-container">
-        <button *ngIf="isLoggedIn" routerLink="/invoice" class="nav-button">Invoice</button>
+        <button *ngIf="isLoggedIn" routerLink="/invoice" class="nav-button">PDF generator</button>
+        <button *ngIf="isLoggedIn" routerLink="/converter" class="nav-button">WordToPDF converter</button> <!-- Add this line -->
         <button *ngIf="isLoggedIn" (click)="onLogout()" class="nav-button logout-button">Logout</button>
     </div>
 </nav>
