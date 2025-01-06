@@ -4,6 +4,7 @@
 # pip install docxtpl
 # pip install requests
 # pip install pillow
+# pip install mysql-connector-python
 
 # To run the server: uvicorn api:app --reload
 #   If it doesn't work, this may work instead: python -m uvicorn main:app --reload

@@ -3,13 +3,29 @@ from fastapi import FastAPI, Form, File, Header, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 import logging
+from dotenv import load_dotenv
+import mysql.connector
+
+import os
 
 # Brugt til i konversionen af nødvændig data, ved konvertering fra .json til given datatype
 import json
 import shutil
 from local import *
 
+
+
 ## ------------------------------------------ Skrevet af Bjørn --------------------------------------- ##
+# Connection til databasen
+load_dotenv()
+
+mydb = mysql.connector.connect(
+    host=os.environ.get("DB_HOST"),
+    user=os.environ.get("DB_USER"),
+    password=os.environ.get("DB_PASSWORD"),
+    database=os.environ.get("DB_DATABASE")
+)
+
 app = FastAPI()
 
 app.add_middleware(
@@ -24,15 +40,16 @@ app.add_middleware(
 logging.basicConfig(level=logging.INFO)
 
 
-# API nøgler til validering
-API_KEYS = {
-    'user1': 'abc123456789',
-    'user2': 'def987654321',
-}
+
 
 # Funktion til at validere API nøgle
 def validate_api_key(api_key: str) -> bool:
-    return api_key in API_KEYS.values()
+    cursor = mydb.cursor()
+    query = "SELECT `keys` FROM `api_keys` WHERE `keys` = %s"
+    cursor.execute(query, (api_key,))
+    result = cursor.fetchone()
+    cursor.close()
+    return result is not None
 ## --------------------------------------------------------------------------------------------------- ##
 
 ## --------------------------------------- Skrevet af Magnus og Bjørn -------------------------------- ##
@@ -48,7 +65,7 @@ async def insert_dynamic_data(
 
      # Validate API key
     if not x_api_key or not validate_api_key(x_api_key):
-        raise HTTPException(status_code = 401, detail = 'Unauthorized: Invalid API Key')
+        raise HTTPException(status_code=401, detail='Unauthorized: Invalid API Key')
 
     logging.info('API Key validated.')
     ## ----------------------------------------------------------------------------------------------- ##
@@ -69,8 +86,9 @@ async def insert_dynamic_data(
     try:
         return InsertDynamicData(templatePath, context, pdfName)
     except Exception as e:
-        logging.info(f'InsertDynamicData returned {e}')
-        return e
+        logging.info(f'InsertDynamicData returned: {e}')
+        RemoveTempFiles(templatePath, pdfName)
+        raise HTTPException(status_code = 500, detail = f'{e}')
 ## --------------------------------------------------------------------------------------------------- ##
 
 ## ----------------------------------------- Skrevet af Bjørn ---------------------------------------- ##
