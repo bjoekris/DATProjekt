@@ -137,7 +137,7 @@ export class AppComponent {
       return;
     }
 
-    const apiKey = 'abc123456789';
+    const apiKey = '123456789';
     this.templateService.sendDynamicData(this.templateFile, this.formData, apiKey)
       .subscribe(response => {
         saveAs(response, 'generated.pdf');

@@ -201,7 +201,7 @@ def HandleImages(context: dict, tpl: DocxTemplate):
 
         img.close()
 
-        if image['Positioned'] == 'True':
+        if image['List'] == 0:
             context[f'Image{index}'] = templateImage
         
         else:
