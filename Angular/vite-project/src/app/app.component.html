@@ -57,7 +57,7 @@
         <ng-template #defaultList>
           <input [type]="list.type" [(ngModel)]="formData[list.name][i]" name="{{ list.name }}_{{ i }}" />
         </ng-template>
-        <button type="button" (click)="removeListItem(list.name, i)">Remove</button>
+        <button class="button-remove" type="button" (click)="removeListItem(list.name, i)">Remove</button>
       </div>
       <button type="button" (click)="addListItem(list.name)">Add Item</button>
     </div>
@@ -77,7 +77,7 @@
               <input type="text" [(ngModel)]="formData[tableField.name][i][column]" name="{{ tableField.name }}_{{ i }}_{{ column }}" />
             </td>
             <td>
-              <button type="button" (click)="removeTableRow(tableField.name, i)" *ngIf="i > 0">Remove</button>
+              <button class="button-remove" type="button" (click)="removeTableRow(tableField.name, i)" *ngIf="i > 0">Remove</button>
             </td>
           </tr>
           <tr *ngIf="!formData[tableField.name]?.length">
@@ -90,6 +90,8 @@
       <button type="button" (click)="addTableRow(tableField.name, tableField.variables.get(tableField.objectRef) ?? [])">Add Row</button>
     </div>
 
-    <button type="submit" [disabled]="!templateForm.form.valid">Generate PDF</button>
+    <button type="submit" [disabled]="!templateForm.form.valid || !templateFile"
+    [attr.title]="(!templateForm.form.valid || !templateFile) ? 'Upload skabelon og indtast data' : null">Generer
+    PDF</button>
   </form>
 </div>

@@ -24,7 +24,7 @@ export class TemplateService {
         'X-API-KEY': apiKey
         
       });
-      console.log(headers, apiKey);
+      console.log("Sent Headers and ApiKey", headers, apiKey);
       return this.http.post(this.apiUrl, form, { headers, responseType: 'blob' });
       
   }

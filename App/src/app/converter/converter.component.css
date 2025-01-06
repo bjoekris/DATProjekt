@@ -86,7 +86,7 @@ h2 {
 
 .upload-box {
   width: 100%;
-  background-color: #3D99F5;
+  background-color: #007BFF;
   border-radius: 16px;
   padding: 32px;
   margin: 0 auto;
@@ -98,7 +98,7 @@ h2 {
 }
 
 .upload-box:hover {
-  background-color: #398BDE;
+  background-color: #046ad6;
 }
 
 .upload-box button {
