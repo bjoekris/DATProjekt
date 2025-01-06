@@ -1,0 +1,96 @@
+<!--Bjørn-->
+
+<div class="container">
+  <h1>InvoiEZ Word skabelon til PDF converter</h1>
+  <h2>Sådan anvender du InvoiEZ</h2>
+  <ul class="guide-list">
+    <li ngNonBindable>
+      Opret dit worddokument og skriv f.eks. {{Fornavn}} eller {{Adresse}} for at angive et dynamisk felt.
+    </li>
+    <li ngNonBindable>
+      Upload word dokumentet og udfyld de dynamiske felter med den data du vil bruge.
+    </li>
+    <li ngNonBindable>
+      Når alle felter er udfyldt kan du trykke på "Generer PDF" knappen og modtage dine færdige pdf.
+    </li>
+  </ul>
+
+  <form (ngSubmit)="onSubmit()" #templateForm="ngForm">
+    
+    <div class="loader-container" *ngIf="loading">
+      <div class="loader"></div>
+    </div>
+    <div class="upload-box">
+      <img class="text-files-svg" src="text-files.svg" alt="">
+      <input type="file" id="templateFile" (change)="onFileChange($event)" required #fileInput />
+      <button type="button" (click)="fileInput.click()">
+        <img src="upload.svg" alt="">Upload template
+      </button>
+    <p class="file-name" *ngIf="templateFile">{{templateFile.name}}</p>
+    </div>
+    <br>
+    <div *ngFor="let field of dynamicFields" class="form-group">
+      <label [for]="field.name">{{ field.name }}</label>
+      <input type="text" [id]="field.name" [(ngModel)]="formData[field.name]" [name]="field.name" required />
+    </div>
+
+    <div *ngFor="let list of listFields">
+      <label>{{ list.name }}</label>
+      <div *ngFor="let item of formData[list.name]; let i = index; trackBy: trackByIndex">
+        <ng-container *ngIf="list.type === 'image'; else defaultList">
+          <label>Image URL</label>
+          <input type="text" [(ngModel)]="formData[list.name][i].url" name="{{ list.name }}_{{ i }}_url" />
+          <label>Which list should include this image. Put 0 if not in list</label>
+          <input type="number" [(ngModel)]="formData[list.name][i].list" name="{{ list.name }}_{{ i }}_list" min="0" max="10" />
+          <label>Set the size, as well as wether you want to increase by width, or height of the image</label>
+          <input type="number" [(ngModel)]="formData[list.name][i].size" name="{{ list.name }}_{{ i }}_size" min="0" max="9999" />
+          <!-- TO DO: Make auto be selected by default -->
+          <div>
+            <input type="radio" [(ngModel)]="formData[list.name][i].option" name="{{ list.name }}_{{ i }}_option" value="size" /> Auto
+          </div>
+          <div>
+            <input type="radio" [(ngModel)]="formData[list.name][i].option" name="{{ list.name }}_{{ i }}_option" value="width" /> Width
+          </div>
+          <div>
+            <input type="radio" [(ngModel)]="formData[list.name][i].option" name="{{ list.name }}_{{ i }}_option" value="height" /> Height
+          </div>
+        </ng-container>
+        <ng-template #defaultList>
+          <input [type]="list.type" [(ngModel)]="formData[list.name][i]" name="{{ list.name }}_{{ i }}" />
+        </ng-template>
+        <button type="button" (click)="removeListItem(list.name, i)">Remove</button>
+      </div>
+      <button type="button" (click)="addListItem(list.name)">Add Item</button>
+    </div>
+
+    <div *ngFor="let tableField of tableFields" class="form-group">
+      <label>{{ tableField.name }}</label>
+      <table class="table">
+        <thead>
+          <tr>
+            <th *ngFor="let column of tableField.variables.get(tableField.name) ?? []">{{ column }}</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of formData[tableField.name]; let i = index; trackBy: trackByIndex">
+            <td *ngFor="let column of tableField.variables.get(tableField.name) ?? []">
+              <input type="text" [(ngModel)]="formData[tableField.name][i][column]" name="{{ tableField.name }}_{{ i }}_{{ column }}" />
+            </td>
+            <td>
+              <button type="button" (click)="removeTableRow(tableField.name, i)" *ngIf="i > 0">Remove</button>
+            </td>
+          </tr>
+          <tr *ngIf="!formData[tableField.name]?.length">
+            <td *ngFor="let column of tableField.variables.get(tableField.name) ?? []">
+              <input type="text" [(ngModel)]="formData[tableField.name][0][column]" name="{{ tableField.name }}_0_{{ column }}" />
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <button type="button" (click)="addTableRow(tableField.name, tableField.variables.get(tableField.name) ?? [])">Add Row</button>
+    </div>
+
+    <button type="submit" [disabled]="!templateForm.form.valid">Generate PDF</button>
+  </form>
+</div>

@@ -211,5 +211,5 @@ class GeneralTests:
         return not (os.path.isfile(f'{pdfName}.docx') or os.path.isfile(testTemplatePath))
             
 
-if __name__ == '__main__':
-    unittest.main()
+#if __name__ == '__main__':
+ #   unittest.main()
