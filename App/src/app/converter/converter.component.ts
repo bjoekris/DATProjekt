@@ -7,7 +7,7 @@ import { saveAs } from 'file-saver';
 import { TemplateService } from './template.service';
 import mammoth from 'mammoth';
 
-//Bjørn
+//Bjørn og Magnus
 
 interface DynamicField {
   name: string;
@@ -24,12 +24,14 @@ interface DynamicField {
 })
 export class ConverterComponent {
   templateFile: File | null = null;
-  formData: any = {};
+  formData: any = {
+    Images: []
+  };
   dynamicFields: DynamicField[] = [];
   loading: boolean = false;
-  listFields: { name: string, type: DynamicField['type'] }[] = [];
-  tableFields: { name: string, variables: Map<string, string[]>, type: DynamicField['type'] }[] = [];
-  title = 'Converter';
+  listFields: { name: string, variables?: Map<string, string[]>, type: DynamicField['type'] }[] = [];
+  tableFields: { name: string, objectRef: string, variables: Map<string, string[]>, type: DynamicField['type'] }[] = [];
+  title = 'App';
 
   constructor(private templateService: TemplateService, private http: HttpClient) {}
 
@@ -78,8 +80,13 @@ export class ConverterComponent {
       const tableForRegex = /{%[tc]r for (\w+) in (\w+) %}/g;
       const objectReference = '';
       const variables = [];
+      let tableName = '';
       while ((match = tableForRegex.exec(text)) !== null) {
         const objectReference = match[1];
+        tableName = match[2];
+        if (!this.formData[tableName]) {
+          this.formData[tableName] = [tableName];
+        }
         const tableStart = match.index;
         const tableEndforRegex = /{% endfor %}/g;
         tableEndforRegex.lastIndex = tableForRegex.lastIndex;
@@ -89,20 +96,20 @@ export class ConverterComponent {
           const variableRegex = new RegExp(`{{${objectReference}\\.([^}]+)}}`, 'g');
           let variableMatch;
           while ((variableMatch = variableRegex.exec(text.substring(tableStart, tableEnd))) !== null) {
-            const variableName = `${objectReference}.${variableMatch[1]}`;
+            const variableName = variableMatch[1];
             variables.push(variableName);
-            tableFields.push(variableName);
+            tableFields.push(objectReference+"."+variableName);
           }
         }
       }
       tableVariables.set(objectReference, variables);
-      this.tableFields.push({ name: objectReference, variables: tableVariables, type: 'table' });
+      this.tableFields.push({ name: tableName, objectRef: objectReference, variables: tableVariables, type: 'table' });
 
       // Used in the table display
-      if (!this.formData[objectReference]) {
-        this.formData[objectReference] = [{}];
+      if (!this.formData[tableName]) {
+        this.formData[tableName] = [{}];
         variables.forEach(variable => {
-          this.formData[objectReference][0][variable] = '';
+          this.formData[tableName][0][variable] = '';
         });
       }
     
@@ -170,8 +177,8 @@ export class ConverterComponent {
     if (!this.formData[listFieldName]) {
       this.formData[listFieldName] = [];
     }
-    if (listFieldName.includes('image')) {
-      this.formData[listFieldName].push({ url: '', caption: '', option: 'auto' });
+    if (listFieldName.toLowerCase().includes('image')) {
+      this.formData[listFieldName].push({ URL: '', Size: 100, List: 1, Option: 'Auto' });
     } else {
       this.formData[listFieldName].push('');
     }
@@ -187,6 +194,13 @@ export class ConverterComponent {
     if (!this.formData[tableName]) {
       this.formData[tableName] = [];
     }
+    
+    for (let element of this.formData[tableName]) {
+      if (element === tableName) {
+        element = [];
+      }
+    }
+
     const newRow: any = {};
     columns.forEach(column => {
       newRow[column] = '';
@@ -199,7 +213,4 @@ export class ConverterComponent {
       this.formData[tableName].splice(index, 1);
     }
   }
-
-  
 }
-
