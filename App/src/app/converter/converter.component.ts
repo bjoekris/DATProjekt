@@ -58,6 +58,7 @@ export class ConverterComponent {
     
       // Used to identify lists and their variables
       const listForRegex = /{% for (\w+) in (\w+) %}/g;
+      let imagesFound: boolean = false;
       let match;
       while ((match = listForRegex.exec(text)) !== null) {
         const listEndforRegex = /{% endfor %}/g;
@@ -67,6 +68,11 @@ export class ConverterComponent {
           let type: DynamicField['type'] = 'list';
           if (match[2].toLowerCase().includes('image')) {
             type = 'image';
+            match[2] = 'Images';
+            if (imagesFound) {
+              continue;
+            }
+            imagesFound = true;
           } else {
             type = 'list';
           }
@@ -78,15 +84,12 @@ export class ConverterComponent {
       // Used to identify tables and their variables
       const tableVariables = new Map<string, string[]>();
       const tableForRegex = /{%[tc]r for (\w+) in (\w+) %}/g;
-      const objectReference = '';
+      let objectReference = '';
       const variables = [];
       let tableName = '';
       while ((match = tableForRegex.exec(text)) !== null) {
-        const objectReference = match[1];
+        objectReference = match[1];
         tableName = match[2];
-        if (!this.formData[tableName]) {
-          this.formData[tableName] = [tableName];
-        }
         const tableStart = match.index;
         const tableEndforRegex = /{% endfor %}/g;
         tableEndforRegex.lastIndex = tableForRegex.lastIndex;
@@ -101,16 +104,13 @@ export class ConverterComponent {
             tableFields.push(objectReference+"."+variableName);
           }
         }
+        tableVariables.set(objectReference, variables);
+        this.tableFields.push({ name: tableName, objectRef: objectReference, variables: tableVariables, type: 'table' });
       }
-      tableVariables.set(objectReference, variables);
-      this.tableFields.push({ name: tableName, objectRef: objectReference, variables: tableVariables, type: 'table' });
 
       // Used in the table display
       if (!this.formData[tableName]) {
         this.formData[tableName] = [{}];
-        variables.forEach(variable => {
-          this.formData[tableName][0][variable] = '';
-        });
       }
     
       const regex = /{{([^}]+)}}/g;
@@ -195,12 +195,6 @@ export class ConverterComponent {
       this.formData[tableName] = [];
     }
     
-    for (let element of this.formData[tableName]) {
-      if (element === tableName) {
-        element = [];
-      }
-    }
-
     const newRow: any = {};
     columns.forEach(column => {
       newRow[column] = '';
