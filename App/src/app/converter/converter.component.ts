@@ -7,7 +7,7 @@ import { saveAs } from 'file-saver';
 import { TemplateService } from './template.service';
 import mammoth from 'mammoth';
 
-//Bjørn og Magnus
+//Bjørn
 
 interface DynamicField {
   name: string;
@@ -24,14 +24,12 @@ interface DynamicField {
 })
 export class ConverterComponent {
   templateFile: File | null = null;
-  formData: any = {
-    Images: []
-  };
+  formData: any = {};
   dynamicFields: DynamicField[] = [];
   loading: boolean = false;
-  listFields: { name: string, variables?: Map<string, string[]>, type: DynamicField['type'] }[] = [];
-  tableFields: { name: string, objectRef: string, variables: Map<string, string[]>, type: DynamicField['type'] }[] = [];
-  title = 'App';
+  listFields: { name: string, type: DynamicField['type'] }[] = [];
+  tableFields: { name: string, variables: Map<string, string[]>, type: DynamicField['type'] }[] = [];
+  title = 'Converter';
 
   constructor(private templateService: TemplateService, private http: HttpClient) {}
 
@@ -58,7 +56,6 @@ export class ConverterComponent {
     
       // Used to identify lists and their variables
       const listForRegex = /{% for (\w+) in (\w+) %}/g;
-      let imagesFound: boolean = false;
       let match;
       while ((match = listForRegex.exec(text)) !== null) {
         const listEndforRegex = /{% endfor %}/g;
@@ -68,11 +65,6 @@ export class ConverterComponent {
           let type: DynamicField['type'] = 'list';
           if (match[2].toLowerCase().includes('image')) {
             type = 'image';
-            match[2] = 'Images';
-            if (imagesFound) {
-              continue;
-            }
-            imagesFound = true;
           } else {
             type = 'list';
           }
@@ -84,12 +76,10 @@ export class ConverterComponent {
       // Used to identify tables and their variables
       const tableVariables = new Map<string, string[]>();
       const tableForRegex = /{%[tc]r for (\w+) in (\w+) %}/g;
-      let objectReference = '';
+      const objectReference = '';
       const variables = [];
-      let tableName = '';
       while ((match = tableForRegex.exec(text)) !== null) {
-        objectReference = match[1];
-        tableName = match[2];
+        const objectReference = match[1];
         const tableStart = match.index;
         const tableEndforRegex = /{% endfor %}/g;
         tableEndforRegex.lastIndex = tableForRegex.lastIndex;
@@ -99,18 +89,21 @@ export class ConverterComponent {
           const variableRegex = new RegExp(`{{${objectReference}\\.([^}]+)}}`, 'g');
           let variableMatch;
           while ((variableMatch = variableRegex.exec(text.substring(tableStart, tableEnd))) !== null) {
-            const variableName = variableMatch[1];
+            const variableName = `${objectReference}.${variableMatch[1]}`;
             variables.push(variableName);
-            tableFields.push(objectReference+"."+variableName);
+            tableFields.push(variableName);
           }
         }
-        tableVariables.set(objectReference, variables);
-        this.tableFields.push({ name: tableName, objectRef: objectReference, variables: tableVariables, type: 'table' });
       }
+      tableVariables.set(objectReference, variables);
+      this.tableFields.push({ name: objectReference, variables: tableVariables, type: 'table' });
 
       // Used in the table display
-      if (!this.formData[tableName]) {
-        this.formData[tableName] = [{}];
+      if (!this.formData[objectReference]) {
+        this.formData[objectReference] = [{}];
+        variables.forEach(variable => {
+          this.formData[objectReference][0][variable] = '';
+        });
       }
     
       const regex = /{{([^}]+)}}/g;
@@ -177,8 +170,8 @@ export class ConverterComponent {
     if (!this.formData[listFieldName]) {
       this.formData[listFieldName] = [];
     }
-    if (listFieldName.toLowerCase().includes('image')) {
-      this.formData[listFieldName].push({ URL: '', Size: 100, List: 1, Option: 'Auto' });
+    if (listFieldName.includes('image')) {
+      this.formData[listFieldName].push({ url: '', caption: '', option: 'auto' });
     } else {
       this.formData[listFieldName].push('');
     }
@@ -194,7 +187,6 @@ export class ConverterComponent {
     if (!this.formData[tableName]) {
       this.formData[tableName] = [];
     }
-    
     const newRow: any = {};
     columns.forEach(column => {
       newRow[column] = '';
@@ -207,4 +199,7 @@ export class ConverterComponent {
       this.formData[tableName].splice(index, 1);
     }
   }
+
+  
 }
+

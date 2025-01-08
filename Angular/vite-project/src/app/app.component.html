@@ -39,19 +39,20 @@
       <div *ngFor="let item of formData[list.name]; let i = index; trackBy: trackByIndex">
         <ng-container *ngIf="list.type === 'image'; else defaultList">
           <label>Image URL</label>
-          <input type="text" [(ngModel)]="formData[list.name][i].URL" name="{{ list.name }}_{{ i }}_URL" />
+          <input type="text" [(ngModel)]="formData[list.name][i].url" name="{{ list.name }}_{{ i }}_url" />
           <label>Which list should include this image. Put 0 if not in list</label>
-          <input type="number" [(ngModel)]="formData[list.name][i].List" name="{{ list.name }}_{{ i }}_List" value="List" min="0" max="10" />
-          <label>Set the size, as well as whether you want to increase by width, or height of the image</label>
-          <input type="number" [(ngModel)]="formData[list.name][i].Size" name="{{ list.name }}_{{ i }}_Size" value="Size" min="0" max="9999" />
+          <input type="number" [(ngModel)]="formData[list.name][i].list" name="{{ list.name }}_{{ i }}_list" min="0" max="10" />
+          <label>Set the size, as well as wether you want to increase by width, or height of the image</label>
+          <input type="number" [(ngModel)]="formData[list.name][i].size" name="{{ list.name }}_{{ i }}_size" min="0" max="9999" />
+          <!-- TO DO: Make auto be selected by default -->
           <div>
-            <input type="radio" [(ngModel)]="formData[list.name][i].Option" name="{{ list.name }}_{{ i }}_Option" value="Auto" /> Auto
+            <input type="radio" [(ngModel)]="formData[list.name][i].option" name="{{ list.name }}_{{ i }}_option" value="size" /> Auto
           </div>
           <div>
-            <input type="radio" [(ngModel)]="formData[list.name][i].Option" name="{{ list.name }}_{{ i }}_Option" value="Width" /> Width
+            <input type="radio" [(ngModel)]="formData[list.name][i].option" name="{{ list.name }}_{{ i }}_option" value="width" /> Width
           </div>
           <div>
-            <input type="radio" [(ngModel)]="formData[list.name][i].Option" name="{{ list.name }}_{{ i }}_Option" value="Height" /> Height
+            <input type="radio" [(ngModel)]="formData[list.name][i].option" name="{{ list.name }}_{{ i }}_option" value="height" /> Height
           </div>
         </ng-container>
         <ng-template #defaultList>
@@ -67,13 +68,13 @@
       <table class="table">
         <thead>
           <tr>
-            <th *ngFor="let column of tableField.variables.get(tableField.objectRef) ?? []">{{ column }}</th>
+            <th *ngFor="let column of tableField.variables.get(tableField.name) ?? []">{{ column }}</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           <tr *ngFor="let row of formData[tableField.name]; let i = index; trackBy: trackByIndex">
-            <td *ngFor="let column of tableField.variables.get(tableField.objectRef) ?? []">
+            <td *ngFor="let column of tableField.variables.get(tableField.name) ?? []">
               <input type="text" [(ngModel)]="formData[tableField.name][i][column]" name="{{ tableField.name }}_{{ i }}_{{ column }}" />
             </td>
             <td>
@@ -81,13 +82,13 @@
             </td>
           </tr>
           <tr *ngIf="!formData[tableField.name]?.length">
-            <td *ngFor="let column of tableField.variables.get(tableField.objectRef) ?? []">
+            <td *ngFor="let column of tableField.variables.get(tableField.name) ?? []">
               <input type="text" [(ngModel)]="formData[tableField.name][0][column]" name="{{ tableField.name }}_0_{{ column }}" />
             </td>
           </tr>
         </tbody>
       </table>
-      <button type="button" (click)="addTableRow(tableField.name, tableField.variables.get(tableField.objectRef) ?? [])">Add Row</button>
+      <button type="button" (click)="addTableRow(tableField.name, tableField.variables.get(tableField.name) ?? [])">Add Row</button>
     </div>
 
     <button type="submit" [disabled]="!templateForm.form.valid || !templateFile"
