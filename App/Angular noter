@@ -1,6 +1,9 @@
 commands
 npm install jspdf
 
+kør api
+uvicorn main:app --reload
+
 kør web app/frontend
 ng serve
 

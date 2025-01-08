@@ -72,8 +72,7 @@
                 <button type="button" (click)="removeItem(i)" class="remove-btn">Remove</button>
             </div>
 
-            <!-- Only show the "Add Item" button if there are fewer than 5 items -->
-            <button type="button" (click)="addItem()" *ngIf="invoiceData.items.length < 5" class="add-btn">Add Item</button>
+            <button type="button" (click)="addItem()" class="add-btn">Add Item</button>
         </div>
 
         <button type="submit" [disabled]="!invoiceForm.valid" class="submit-btn">Generate Invoice</button>
