@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { jsPDF } from 'jspdf';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-invoice',
@@ -22,6 +23,8 @@ export class InvoiceComponent {
       }
     ],
   }
+
+  constructor(private http: HttpClient) {}
 
   addItem() {
     this.invoiceData.items.push({
@@ -74,9 +77,22 @@ export class InvoiceComponent {
     doc.text('Total', 130, y);
     doc.text(this.calculateTotal().toFixed(2), 160, y);
 
-    const pdfBlob= doc.output('blob');
-    const blobUrl = URL.createObjectURL(pdfBlob);
-    window.open(blobUrl);
+    const pdfBase64 = doc.output('datauristring');
+
+    window.open(pdfBase64, '_blank');
+
+    const invoiceData = {
+      customerName: this.invoiceData.customerName,
+      items: this.invoiceData.items,
+      pdfBase64: pdfBase64,
+    };
+
+    this.http.post('http://localhost:3000/GeneratedInvoices', invoiceData)
+      .subscribe(response => {
+        console.log('Invoice saved successfully', response);
+      }, error => {
+        console.error('Error saving invoice', error);
+      });
   }
 }
 
