@@ -38,6 +38,47 @@ app.get('/', (req, res) => {
   res.send('Backend server running');
 });
 
+//GeneratedInvoiceDB
+const fs = require('fs');
+const path = require('path');
+const { jsPDF } = require('jspdf');
+
+app.post('/GeneratedInvoices', (req, res) => {
+    const { customerName, items, pdfBase64 } = req.body;
+
+    if (!customerName || !items || items.length === 0 || !pdfBase64) {
+        return res.status(400).json({ message: 'Customer name and items are required' });
+    }
+
+    const issueDate = new Date().toISOString().slice(0, 10);
+    const pdfBuffer = Buffer.from(pdfBase64.split(',')[1], 'base64');
+
+    const invoicesDir = path.join(__dirname, 'invoices');
+    if (!fs.existsSync(invoicesDir)) {
+        fs.mkdirSync(invoicesDir);
+    }
+
+    const pdfFileName = `invoice_${Date.now()}.pdf`;
+    const pdfPath = path.join(invoicesDir, pdfFileName);
+
+    fs.writeFileSync(pdfPath, pdfBuffer);
+
+    const pdfUrl = `http://localhost:3000/invoices/${pdfFileName}`;
+    const insertQuery
+        = `INSERT INTO GeneratedInvoices (CustomerName, IssueDate, PdfUrl) VALUES (?, ?, ?)`;
+
+        db.query(insertQuery, [customerName, issueDate, pdfUrl], (err, result) => {
+            if (err) {
+                console.error('Database error:', err);
+                return res.status(500).json({ message: 'Database error' }); 
+            }
+
+            res.status(201).json({ message: 'Invoice created' });
+        });
+});
+
+app.use('/invoices', express.static(path.join(__dirname, 'invoices')));
+
 //register
 app.post('/register', async (req, res) => {
     const { email, password } = req.body;
