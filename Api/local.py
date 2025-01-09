@@ -158,7 +158,11 @@ def HandleImages(context: dict, tpl: DocxTemplate):
         imageRatio = img.width / img.height
 
         # Her bestemes der om hvilken af størrelses-værdierne der skal bruges fra det givne billede
-        # Det er også her der bliver checked om størrelses-værdierne er sat for højt
+        # Det er også her der bliver checked om størrelses-værdierne er sat for højt eller lavt
+        if image['Size'] == 0:
+            img.close()
+            raise ValueError(f'{image["URL"]} caused an error, at position: {index + 1}. Size must be larger than 0.')
+        
         if image['Option'] == 'Auto':
             if img.width > img.height: useWidth = True
             else: useWidth = False
