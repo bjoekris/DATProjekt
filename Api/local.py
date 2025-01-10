@@ -55,11 +55,9 @@ def ValidateVariables(path: str, context: dict):
     doc = Document(path)
     valid = True
 
-    keysContained = []
     keysNotContained = []
-    values = []
     valuesNotInputted = []
-    valuesInputted = []
+    values = []
 
     # Alle variabler i skabelonet starter med "{{"
     # Derfor kan man finde alle variabler ved at lede gennem alt tekst i dokumentet efter disse
@@ -91,7 +89,8 @@ def ValidateVariables(path: str, context: dict):
 
     # Ignoere lister, da disse godt må være tomme
     for key in context:
-        if not isinstance(context[key], list): keysNotContained.append(key)
+        if not isinstance(context[key], list):
+            keysNotContained.append(key)
     
     for value in values:
         valuesNotInputted.append(value)
@@ -99,10 +98,7 @@ def ValidateVariables(path: str, context: dict):
     for value in values:
         for key in context:
             if value == key:
-                keysContained.append(key)
                 keysNotContained.remove(key)
-
-                valuesInputted.append(value)
                 valuesNotInputted.remove(value)
     
     # Bygger exception-string, så den kan returneres til brugeren
@@ -119,6 +115,7 @@ def ValidateVariables(path: str, context: dict):
         
         valid = False
     
+    # ErrMsg er en tom string, hvis der ikke er nogle fejl
     return errMsg, valid
 
 def FindVariables(t):
@@ -129,12 +126,10 @@ def FindVariables(t):
             tempValues.remove(temp)
 
     # Isolere skabelon-variablerne fra de sidste klammer, så de kan sammenlignes med context-variablerne
-    foundValues = []
     for i in range(len(tempValues)):
-        tempValue = tempValues[i].split('}}')[0]
-        foundValues.append(tempValue)
+        tempValues[i] = tempValues[i].split('}}')[0]
 
-    return foundValues
+    return tempValues
 
 def FindImage(url: str, fileName: str):
     data = requests.get(url).content
@@ -146,10 +141,8 @@ def FindImage(url: str, fileName: str):
 
 def HandleImages(context: dict, tpl: DocxTemplate):
     index = 0
-    
     for image in context['Images']:
         foundImage = FindImage(image['URL'], f'image{index}')
-        templateImage = InlineImage(tpl, foundImage)
 
         maxWidth = 170
         maxHeight = 125
@@ -159,7 +152,7 @@ def HandleImages(context: dict, tpl: DocxTemplate):
 
         # Her bestemes der om hvilken af størrelses-værdierne der skal bruges fra det givne billede
         # Det er også her der bliver checked om størrelses-værdierne er sat for højt eller lavt
-        if image['Size'] == 0:
+        if image['Size'] <= 0:
             img.close()
             raise ValueError(f'{image["URL"]} caused an error, at position: {index + 1}. Size must be larger than 0.')
         
