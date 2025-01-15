@@ -21,10 +21,10 @@
       <div class="loader"></div>
     </div>
     <div class="upload-box">
-      <img class="text-files-svg" src="text-files.svg" alt="">
+      <img class="text-files-svg" src="assets/text-files.svg" alt="">
       <input type="file" id="templateFile" (change)="onFileChange($event)" required #fileInput />
       <button type="button" (click)="fileInput.click()">
-        <img src="upload.svg" alt="">Upload template
+        <img src="assets/upload.svg" alt="">Upload template
       </button>
     <p class="file-name" *ngIf="templateFile">{{templateFile.name}}</p>
     </div>
