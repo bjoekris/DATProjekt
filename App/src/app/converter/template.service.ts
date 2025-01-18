@@ -18,9 +18,6 @@ export class TemplateService {
       form.append('templateFile', templateFile);
       form.append('contextFile', new Blob([JSON.stringify(formData)], { type: 'application/json' }));
 
-      // DELETE LATER
-      console.log(formData);
-  
       const headers = new HttpHeaders({
         'X-API-KEY': apiKey
         
