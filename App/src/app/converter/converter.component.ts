@@ -58,7 +58,6 @@ export class ConverterComponent {
     
       // Used to identify lists and their variables
       const listForRegex = /{% for (\w+) in (\w+) %}/g;
-      let imagesFound: boolean = false;
       let match;
       while ((match = listForRegex.exec(text)) !== null) {
         const listEndforRegex = /{% endfor %}/g;
@@ -67,17 +66,21 @@ export class ConverterComponent {
         if (endMatch) {
           let type: DynamicField['type'] = 'list';
           if (match[2].toLowerCase().includes('image')) {
-            type = 'image';
-            match[2] = 'Images';
-            if (imagesFound) {
+            if (listFields.includes('Images')) {
               continue;
             }
-            imagesFound = true;
+            type = 'image';
+            match[2] = 'Images';
           } else {
             type = 'list';
           }
           this.listFields.push({ name: match[2], type });
-          listFields.push(match[1]);
+          if (match[2] === 'Images') {
+            listFields.push(match[2]);
+          }
+          else {
+            listFields.push(match[1]);
+          }
         }
       }
     
@@ -91,7 +94,7 @@ export class ConverterComponent {
         objectReference = match[1];
         tableName = match[2];
         const tableStart = match.index;
-        const tableEndforRegex = /{% endfor %}/g;
+        const tableEndforRegex = /{%[tc]r endfor %}/g;
         tableEndforRegex.lastIndex = tableForRegex.lastIndex;
         const tableEndMatch = tableEndforRegex.exec(text);
         if (tableEndMatch) {
@@ -132,7 +135,15 @@ export class ConverterComponent {
     
         const name = variable.replace(/(?:text|number|file|media)$/, '');
         
-        if (listFields.includes(variable) || tableFields.includes(variable) || variable.toLowerCase().includes('image')) {
+        if (listFields.includes(variable) || tableFields.includes(variable)) {
+          continue;
+        }
+        else if (variable.toLowerCase().includes('image')) {
+          if (!listFields.includes('Images')) {
+            listFields.push('Images');
+            this.listFields.push({ name: 'Images', type: 'image' });
+            continue;
+          }
           continue;
         }
   
@@ -178,7 +189,7 @@ export class ConverterComponent {
       this.formData[listFieldName] = [];
     }
     if (listFieldName.toLowerCase().includes('image')) {
-      this.formData[listFieldName].push({ URL: '', Size: 100, List: 1, Option: 'Auto' });
+      this.formData[listFieldName].push({ URL: '', Size: 100, List: 0, Option: 'Auto' });
     } else {
       this.formData[listFieldName].push('');
     }
