@@ -11,6 +11,6 @@ export const routes: Routes = [
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
   { path: 'invoice', component: InvoiceComponent, canActivate: [AuthGuard] },
-  { path: 'converter', component: ConverterComponent }, 
+  { path: 'converter', component: ConverterComponent, canActivate: [AuthGuard] }, 
   { path: '**', redirectTo: '/login' },
 ];

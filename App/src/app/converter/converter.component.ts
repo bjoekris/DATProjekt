@@ -7,17 +7,20 @@ import { saveAs } from 'file-saver';
 import { TemplateService } from './template.service';
 import mammoth from 'mammoth';
 
+import {TypeInfoComponent} from '../type-info/type-info.component';
+
 //Bjørn og Magnus
 
 interface DynamicField {
   name: string;
   type: 'text' | 'number' | 'file' | 'media' | 'list' | 'image' | 'table';
+  
 }
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, FormsModule], 
+  imports: [CommonModule, FormsModule, TypeInfoComponent], 
   templateUrl: './converter.component.html',
   styleUrls: ['./converter.component.css'],
   providers: [HttpClient]
@@ -32,6 +35,16 @@ export class ConverterComponent {
   listFields: { name: string, variables?: Map<string, string[]>, type: DynamicField['type'] }[] = [];
   tableFields: { name: string, objectRef: string, variables: Map<string, string[]>, type: DynamicField['type'] }[] = [];
   title = 'App';
+  accordionItems=[
+    { title: 'Normal tekst', description:"For at indsætte normal tekst, skal du skrive et nøgleord der er omringet med {{ og }}. For eksempel {{Navn}} og {{Adresse}}. På den måde kan du sætte flere tekster præcis hvor du ønsker dem i din skabelon."},
+    { title: 'Billeder', description:"For at indsætte billeder, skal du bruge {{ImageX}} hvor X er et tal. For eksempel {{Image1}} og {{Image2}}. På den måde kan du indsætte flere billeder præcis hvor du ønsker dem i din skabelon. Billederne indsættes vha. en URL."},
+    { title: 'Lister', description:"For at indsætte lister, skal du skrive {% for X in Y %} og {% endfor %}. For eksempel {% for Kunde in Kunder %} {% endfor %}. ´Kunder´ er navnet på selve listen og ´kunde´ er selve kunderne. {% endfor %} er for at slutte listen. På den måde kan du indsætte flere lister præcis hvor du ønsker dem i din skabelon."},
+    { title: 'Tabeler', description:"Content 4"},
+  
+  ]
+
+errorMessage = '';
+errorMessages = [];
 
   constructor(private templateService: TemplateService, private http: HttpClient) {}
 
@@ -161,6 +174,7 @@ export class ConverterComponent {
     }
   }
 
+
   onSubmit() {
     this.loading = true;
     console.log("OnSubmit function called");
@@ -175,8 +189,10 @@ export class ConverterComponent {
         saveAs(response, 'invoiEZ.pdf');
         this.loading = false;
       }, error => {
-        console.error('Error generating PDF:', error);
+        console.error('Error generating PDF:', error); 
         this.loading = false;
+        return this.errorMessage = getErrorMessage(error.status);
+       
       });
   }
 
@@ -218,4 +234,15 @@ export class ConverterComponent {
       this.formData[tableName].splice(index, 1);
     }
   }
+}
+
+
+function getErrorMessage(code: number) {
+  const errorMessages: { [key: number]: string } = {
+    401: 'Desværre du har ikke adgang. Kontakt venligst administratoren',
+    404: 'Desværre, vi kunne ikke finde det, du ledte efter. Kontakt venligst administratoren',
+    500: 'Desværre, der er sket en fejl på serveren. Kontakt venligst administratoren'
+  };
+
+  return errorMessages[code] || 'Ukendt fejl';
 }

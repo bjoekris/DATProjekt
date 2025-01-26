@@ -1,0 +1,39 @@
+:host {
+    margin-top: auto;
+}
+
+.footer {
+    background-color: #007bff;
+    padding: 10px 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 50px; 
+
+}
+
+.footer-container {
+    display: flex;
+    align-items: center;
+    color: white;
+    font-weight: bold;
+}
+
+.email-button {
+    background-color: #ffffff;
+    color: #007bff;
+    border: 1px solid #007bff;
+    padding: 5px;
+    border-radius: 4px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background-color 0.3s, color 0.3s;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.email-button:hover {
+    background-color: #0056b3;
+    color: #ffffff;
+}

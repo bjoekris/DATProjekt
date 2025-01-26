@@ -1,22 +1,27 @@
 <!--Bjørn og Magnus-->
 
+
+
 <div class="container">
   <h1>InvoiEZ Word skabelon til PDF converter</h1>
-  <h2>Sådan anvender du InvoiEZ</h2>
+  <h2>Anvendelse af InvoiEZ</h2>
   <ul class="guide-list">
     <li ngNonBindable>
-      Opret dit worddokument og skriv f.eks. {{Fornavn}} eller {{Adresse}} for at angive et dynamisk felt.
+      Lav din Word-skabelon ved at bruge nedenstående guide til at vise hvor dit indhold skal placeres.
     </li>
     <li ngNonBindable>
-      Upload word dokumentet og udfyld de dynamiske felter med den data du vil bruge.
+      Upload Word-skabelonen og tjek at alle de forventede input felter er fundet. Udfyld derefter felterne.
     </li>
     <li ngNonBindable>
       Når alle felter er udfyldt kan du trykke på "Generer PDF" knappen og modtage dine færdige pdf.
     </li>
   </ul>
 
+<!--Adding accordion for guide for the types--> 
+<h3>Sådan indsætter du forskellige typer data i din skabelon inden du uploader den </h3>
+<app-type-info [items]="accordionItems"></app-type-info>
+
   <form (ngSubmit)="onSubmit()" #templateForm="ngForm">
-    
     <div class="loader-container" *ngIf="loading">
       <div class="loader"></div>
     </div>
@@ -24,7 +29,7 @@
       <img class="text-files-svg" src="assets/text-files.svg" alt="">
       <input type="file" id="templateFile" (change)="onFileChange($event)" required #fileInput />
       <button type="button" (click)="fileInput.click()">
-        <img src="assets/upload.svg" alt="">Upload template
+        <img src="assets/upload.svg" alt="">Upload skabelon
       </button>
     <p class="file-name" *ngIf="templateFile">{{templateFile.name}}</p>
     </div>
@@ -93,5 +98,7 @@
     <button type="submit" [disabled]="!templateForm.form.valid || !templateFile"
     [attr.title]="(!templateForm.form.valid || !templateFile) ? 'Upload skabelon og indtast data' : null">Generer
     PDF</button>
+
+    <p *ngIf="errorMessage?.length">{{errorMessage}}</p>
   </form>
 </div>

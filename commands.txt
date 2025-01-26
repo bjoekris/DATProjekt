@@ -16,3 +16,12 @@ For filesaving in angular app.
 npm install file-saver
 npm install mammoth (docs file reader til angular)
 npm install tslib
+
+
+
+
+cd api --> uvicorn main:app --reload
+
+cd App --> ng serve
+
+cd App/AngurlarBackend --> node server.js

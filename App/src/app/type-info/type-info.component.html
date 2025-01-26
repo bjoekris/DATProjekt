@@ -1,0 +1,20 @@
+<cdk-accordion class="accordion">
+    @for (item of items; track item; let index = $index) {
+    <cdk-accordion-item #accordionItem="cdkAccordionItem" class="accordion-item">
+        <button class="accordion-item-header" (click)="accordionItem.toggle()" tabindex="0"
+            [attr.id]="'accordion-header-' + index" [attr.aria-expanded]="accordionItem.expanded"
+            [attr.aria-controls]="'accordion-body-' + index">
+            {{ item.title }}
+            <span class="accordion-item-description">
+               Tryk for at {{ accordionItem.expanded ? 'lukke' : 'åbne' }}
+            </span>
+        </button>
+        @if(accordionItem.expanded) {
+        <div class="accordion-item-body" role="region" [style.display]="accordionItem.expanded ? '' : 'none'"
+            [attr.id]="'accordion-body-' + index" [attr.aria-labelledby]="'accordion-header-' + index">
+            {{ item.description }}
+        </div>
+        }
+    </cdk-accordion-item>
+    }
+</cdk-accordion>
