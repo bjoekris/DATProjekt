@@ -244,5 +244,5 @@ function getErrorMessage(code: number) {
     500: 'Desværre, der er sket en fejl på serveren. Kontakt venligst administratoren'
   };
 
-  return errorMessages[code] || 'Ukendt fejl';
+  return errorMessages[code] || 'Ukendt fejl, kontakt adminstrator.';
 }

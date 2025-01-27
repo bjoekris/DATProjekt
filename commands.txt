@@ -17,7 +17,7 @@ npm install file-saver
 npm install mammoth (docs file reader til angular)
 npm install tslib
 
-
+npm install @angular/cdk
 
 
 cd api --> uvicorn main:app --reload
