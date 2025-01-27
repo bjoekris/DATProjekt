@@ -7,7 +7,7 @@
   <h2>Anvendelse af InvoiEZ</h2>
   <ul class="guide-list">
     <li ngNonBindable>
-      Lav din Word-skabelon ved at bruge nedenstående guide til at vise hvor dit indhold skal placeres.
+      Lav en Word-skabelon med de felter du ønsker at udfylde samt andet indhold du vil have med i din færdige faktura. InvoiEZ behover alt data, som ikke er defineret ud fra de nedenstående data typer, så du kan frit valge en fast baggrund, tekst og billeder. 
     </li>
     <li ngNonBindable>
       Upload Word-skabelonen og tjek at alle de forventede input felter er fundet. Udfyld derefter felterne.
@@ -43,11 +43,11 @@
       <label>{{ list.name }}</label>
       <div *ngFor="let item of formData[list.name]; let i = index; trackBy: trackByIndex">
         <ng-container *ngIf="list.type === 'image'; else defaultList">
-          <label>Image URL</label>
+          <label>URL/link til billedet</label>
           <input type="text" [(ngModel)]="formData[list.name][i].URL" name="{{ list.name }}_{{ i }}_URL" />
-          <label>Which list should include this image. Put 0 if not in list</label>
+          <label>Hvilken liste skal billederne sætte i? Hvis de skal stå alene, sættes den som "0"</label>
           <input type="number" [(ngModel)]="formData[list.name][i].List" name="{{ list.name }}_{{ i }}_List" value="List" min="0" max="10" />
-          <label>Set the size, as well as whether you want to increase by width, or height of the image</label>
+          <label>Definer størrelsen på billedet ud fra Højden, Bredden eller lad InvoiEZ bestemmet med Auto. Billederne behover deres billedeformat.</label>
           <input type="number" [(ngModel)]="formData[list.name][i].Size" name="{{ list.name }}_{{ i }}_Size" value="Size" min="0" max="9999" />
           <div>
             <input type="radio" [(ngModel)]="formData[list.name][i].Option" name="{{ list.name }}_{{ i }}_Option" value="Auto" /> Auto
@@ -62,9 +62,9 @@
         <ng-template #defaultList>
           <input [type]="list.type" [(ngModel)]="formData[list.name][i]" name="{{ list.name }}_{{ i }}" />
         </ng-template>
-        <button class="button-remove" type="button" (click)="removeListItem(list.name, i)">Remove</button>
+        <button class="button-remove" type="button" (click)="removeListItem(list.name, i)">Fjern</button>
       </div>
-      <button type="button" (click)="addListItem(list.name)">Add Item</button>
+      <button type="button" (click)="addListItem(list.name)">Tilføj</button>
     </div>
 
     <div *ngFor="let tableField of tableFields" class="form-group">
@@ -73,7 +73,7 @@
         <thead>
           <tr>
             <th *ngFor="let column of tableField.variables.get(tableField.objectRef) ?? []">{{ column }}</th>
-            <th>Actions</th>
+            <th>Handlinger</th>
           </tr>
         </thead>
         <tbody>
@@ -82,7 +82,7 @@
               <input type="text" [(ngModel)]="formData[tableField.name][i][column]" name="{{ tableField.name }}_{{ i }}_{{ column }}" />
             </td>
             <td>
-              <button class="button-remove" type="button" (click)="removeTableRow(tableField.name, i)" *ngIf="i > 0">Remove</button>
+              <button class="button-remove" type="button" (click)="removeTableRow(tableField.name, i)" *ngIf="i > 0">Fjern</button>
             </td>
           </tr>
           <tr *ngIf="!formData[tableField.name]?.length">
@@ -92,7 +92,7 @@
           </tr>
         </tbody>
       </table>
-      <button type="button" (click)="addTableRow(tableField.name, tableField.variables.get(tableField.objectRef) ?? [])">Add Row</button>
+      <button type="button" (click)="addTableRow(tableField.name, tableField.variables.get(tableField.objectRef) ?? [])">Tilføj Række</button>
     </div>
 
     <button type="submit" [disabled]="!templateForm.form.valid || !templateFile"
